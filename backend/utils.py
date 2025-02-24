@@ -8,7 +8,7 @@ import docx
 import io
 import os
 from dotenv import load_dotenv
-from .schemas import ResponseQuestions
+from schemas import ResponseQuestions
 
 load_dotenv()
 API_KEY = os.getenv('GEMINI_API_KEY')

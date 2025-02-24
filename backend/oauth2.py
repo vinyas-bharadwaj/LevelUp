@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 import os
-from . import schemas, database, models
+import schemas, database, models
 
 load_dotenv()
 

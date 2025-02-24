@@ -2,11 +2,11 @@ from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, D
 from typing import List
 from enum import Enum
 from sqlalchemy.orm import Session
-from ..utils import generate_questions, extract_text_from_file
-from ..schemas import ResponseQuestions
-from ..models import Question, Test, User
-from ..database import get_db, init_db
-from ..oauth2 import get_current_user
+from utils import generate_questions, extract_text_from_file
+from schemas import ResponseQuestions
+from models import Question, Test, User
+from database import get_db, init_db
+from oauth2 import get_current_user
 
 
 router = APIRouter(

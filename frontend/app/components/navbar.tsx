@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from "react";
+import React, { useContext } from "react";
 import Link from "next/link";
 import AuthContext from "@/app/context/AuthContext";
 import { Book, Video, FileCheck, LogIn, UserPlus, LogOut } from "lucide-react";
@@ -17,14 +17,7 @@ const NavLink = ({ href, icon, children }: { href: string; icon?: React.ReactNod
 );
 
 const Navbar = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { logoutUser } = React.useContext(AuthContext) || {};
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    setIsAuthenticated(true);
-  }, []);
-
+  const { user, logoutUser } = useContext(AuthContext) || {};
 
   return (
     <nav className="bg-[#F7F9FC] shadow-md border-b border-[#E0E6ED]">
@@ -38,7 +31,7 @@ const Navbar = () => {
             <NavLink href="/tutorials" icon={<Video className="w-5 h-5" />}>Tutorials</NavLink>
             <NavLink href="/tests" icon={<FileCheck className="w-5 h-5" />}>Tests</NavLink>
 
-            {isAuthenticated ? (
+            {user ? (
               <button 
                 onClick={logoutUser} 
                 className="px-4 py-2 text-sm font-medium rounded-md text-white bg-[#E74C3C] hover:bg-[#C0392B] transition duration-150 ease-in-out flex items-center"

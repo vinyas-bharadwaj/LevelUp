@@ -1,14 +1,13 @@
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Alert from "@/app/components/alert";
 
 // Define types
 interface AuthTokens {
-  access: string;
-  refresh: string;
+  access_token: string;
 }
 
 interface User {
@@ -16,6 +15,7 @@ interface User {
   email?: string;
   // Add other user properties as needed
 }
+
 
 interface AuthContextType {
   user: User | null;
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined" && authTokens) {
-      return jwtDecode<User>(authTokens.access);
+      return jwtDecode<User>(authTokens.access_token);
     }
     return null;
   });
@@ -89,8 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("username", e.target.username.value);
-    formData.append("password", e.target.password.value);
+    formData.append("username", (e.target as HTMLFormElement).username.value);
+    formData.append("password", (e.target as HTMLFormElement).password.value);
 
     try {
       const response = await fetch("http://localhost:8000/login/", {
@@ -101,12 +101,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setAuthTokens(data);
+        setAuthTokens({
+          access_token: data.access_token,  
+        });
         setUser(jwtDecode<User>(data.access_token));
         localStorage.setItem("authTokens", JSON.stringify(data));
         setAlertMessage("Login successful! Redirecting...");
         setAlertType("success");
-        router.push("/");
+        router.push("/")
       } else {
         setAlertMessage("Invalid credentials");
         setAlertType("error");

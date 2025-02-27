@@ -34,7 +34,7 @@ const Navbar = () => {
             {user ? (
               <button 
                 onClick={logoutUser} 
-                className="px-4 py-2 text-sm font-medium rounded-md text-white bg-[#E74C3C] hover:bg-[#C0392B] transition duration-150 ease-in-out flex items-center"
+                className="px-4 py-2 text-sm font-medium rounded-md border border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white transition duration-150 ease-in-out flex items-center"
               >
                 <LogOut className="w-5 h-5 inline-block mr-2" />
                 Logout
@@ -43,14 +43,14 @@ const Navbar = () => {
               <>
                 <Link 
                   href="/login" 
-                  className="px-4 py-2 text-sm font-medium rounded-md text-white bg-[#4A90E2] hover:bg-[#3A7BCC] transition duration-150 ease-in-out"
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#4A90E2] text-[#4A90E2] hover:bg-[#4A90E2] hover:text-white transition duration-150 ease-in-out flex items-center"
                 >
                   <LogIn className="w-5 h-5 inline-block mr-2" />
                   Login
                 </Link>
                 <Link 
                   href="/signup" 
-                  className="px-4 py-2 text-sm font-medium rounded-md text-white bg-[#27AE60] hover:bg-[#1E914F] transition duration-150 ease-in-out"
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#27AE60] text-[#27AE60] hover:bg-[#27AE60] hover:text-white transition duration-150 ease-in-out flex items-center"
                 >
                   <UserPlus className="w-5 h-5 inline-block mr-2" />
                   Sign Up

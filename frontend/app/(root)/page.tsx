@@ -25,7 +25,7 @@ export default function Home() {
           Browse Courses
         </Link>
         <Link
-          href="/generate-test"
+          href="/questions/create"
           className="inline-flex items-center px-6 py-3 text-lg font-medium rounded-md text-[#2C3E50] bg-[#E0E6ED] hover:bg-[#CCD6E0] transition duration-200"
         >
           <FileCheck className="w-6 h-6 mr-2" />

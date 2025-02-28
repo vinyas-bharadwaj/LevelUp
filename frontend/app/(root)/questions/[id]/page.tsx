@@ -1,4 +1,10 @@
 import TestPortal from '@/app/(root)/questions/[id]/TestPortal';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: "Test Generation",
+    description: "Generating questions based on the input file",
+}
 
 interface Question {
   question: string;

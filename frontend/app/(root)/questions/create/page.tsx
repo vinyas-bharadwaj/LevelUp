@@ -11,11 +11,6 @@ interface FormData {
   file: File | null;
 }
 
-interface ApiResponse {
-  id?: string;
-  questions?: Array<any>;
-  [key: string]: any;
-}
 
 interface AlertProps {
   type: "success" | "error";

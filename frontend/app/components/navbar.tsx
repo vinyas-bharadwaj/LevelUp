@@ -3,7 +3,7 @@
 import React, { useContext } from "react";
 import Link from "next/link";
 import AuthContext from "@/app/context/AuthContext";
-import { Book, Video, FileCheck, LogIn, UserPlus, LogOut } from "lucide-react";
+import { Book, Video, FileCheck, LogIn, UserPlus, LogOut, User } from "lucide-react";
 
 // NavLink component
 const NavLink = ({ href, icon, children }: { href: string; icon?: React.ReactNode; children: React.ReactNode }) => (
@@ -32,13 +32,22 @@ const Navbar = () => {
             <NavLink href="/tests" icon={<FileCheck className="w-5 h-5" />}>Tests</NavLink>
 
             {user ? (
-              <button 
-                onClick={logoutUser} 
-                className="px-4 py-2 text-sm font-medium rounded-md border border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white transition duration-150 ease-in-out flex items-center"
-              >
-                <LogOut className="w-5 h-5 inline-block mr-2" />
-                Logout
-              </button>
+              <div className="flex items-center space-x-3">
+                <Link 
+                  href="/profile" 
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#4A90E2] text-[#4A90E2] hover:bg-[#4A90E2] hover:text-white transition duration-150 ease-in-out flex items-center"
+                >
+                  <User className="w-5 h-5 inline-block mr-2" />
+                  Profile
+                </Link>
+                <button 
+                  onClick={logoutUser} 
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C] hover:text-white transition duration-150 ease-in-out flex items-center"
+                >
+                  <LogOut className="w-5 h-5 inline-block mr-2" />
+                  Logout
+                </button>
+              </div>
             ) : (
               <>
                 <Link 

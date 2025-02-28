@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, Depends
-from typing import List
+from typing import List, Union, Dict
 from enum import Enum
 from sqlalchemy.orm import Session
 from utils import generate_questions, extract_text_from_file
@@ -25,7 +25,7 @@ class Difficulty(str, Enum):
     expert = "expert"
 
 
-@router.post("/generate-questions", response_model=List[ResponseQuestions])
+@router.post("/generate-questions", response_model=Dict[str, Union[List[ResponseQuestions], int]])
 async def get_questions(
     file: UploadFile = File(...),
     num_questions: int = Query(5, title="Number of Questions"),
@@ -65,7 +65,7 @@ async def get_questions(
         db.add_all(questions_to_store)
         db.commit()
 
-        return questions_data
+        return {"questions": questions_data, "test_id": new_test.id}
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -81,7 +81,7 @@ async def get_my_tests(
     """
     return db.query(Test).filter(Test.user_id == current_user.id).all()
 
-@router.get("/{test_id}/questions", response_model=List[ResponseQuestions])
+@router.get("/{test_id}", response_model=List[ResponseQuestions])
 def get_test_questions(test_id: int, db: Session = Depends(get_db)):
     """
     Get all questions associated with a test by test_id.

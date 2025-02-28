@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { FileUp } from "lucide-react";
+import { useRouter } from 'next/navigation';
 import Alert from "@/app/components/alert";
 
 // Define interfaces for form data and props
@@ -34,6 +34,8 @@ const TestGeneratorForm: React.FC = () => {
   const [alert, setAlert] = useState<AlertProps | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
+
+  const router = useRouter();
 
   // Get access token from localStorage on component mount
   useEffect(() => {
@@ -181,6 +183,11 @@ const TestGeneratorForm: React.FC = () => {
         type: "success",
         message: "Test generated successfully!"
       });
+
+      // Redirect to the test page using the test ID
+      if (result.test_id) {
+        router.push(`/questions/${result.test_id}`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Something went wrong";
       setAlert({

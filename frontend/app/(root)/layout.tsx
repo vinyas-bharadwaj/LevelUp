@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} `}>
         <AuthProvider>
           <Navbar />
-          <main className="max-w-6xl mx-auto px-6 py-12">{children}</main>
+          <main className="px-6 py-12 bg-[#F7F9FC]">{children}</main>
         </AuthProvider>
       </body>
     </html>

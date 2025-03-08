@@ -62,7 +62,7 @@ export default function TestsPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center pt-10 px-4 bg-[#F7F9FC] text-[#2C3E50] overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center pt-10 px-4 text-[#2C3E50] overflow-hidden">
       {/* Background Art */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-10 left-10 w-40 h-40 bg-[#E0E6ED] rounded-full opacity-50 blur-2xl"></div>

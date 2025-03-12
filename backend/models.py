@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -33,6 +33,7 @@ class Question(Base):
     # Relationship with Test
     test = relationship("Test", back_populates="questions")
 
+
 class Test(Base):
     __tablename__ = "tests"
 
@@ -45,4 +46,3 @@ class Test(Base):
 
     # Relationship with Question
     questions = relationship("Question", back_populates="test", cascade="all, delete")
-   

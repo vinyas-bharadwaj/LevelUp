@@ -25,7 +25,7 @@ export default function Login() {
               name="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Enter your username"
               required
             />
@@ -40,7 +40,7 @@ export default function Login() {
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Enter your password"
               required
             />
@@ -50,13 +50,13 @@ export default function Login() {
               <input type="checkbox" className="mr-2" />
               Remember me
             </label>
-            <Link href="/forgot-password" className="text-[#4A90E2] hover:underline text-sm">
+            <Link href="/forgot-password" className="text-[#2C3E50] hover:underline text-sm">
               Forgot Password?
             </Link>
           </div>
           <button
             type="submit"
-            className="w-full bg-[#4A90E2] hover:bg-[#3A7BCC] text-white font-medium py-2 rounded-md transition duration-200"
+            className="w-full bg-[#2C3E50] hover:bg-[#3a3f46] text-white font-medium py-2 rounded-md transition duration-200"
           >
             Login
           </button>

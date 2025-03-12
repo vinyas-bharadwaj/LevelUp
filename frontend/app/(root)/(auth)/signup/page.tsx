@@ -25,7 +25,7 @@ export default function Signup() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Enter your username"
               required
             />
@@ -39,7 +39,7 @@ export default function Signup() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Enter your email"
               required
             />
@@ -53,7 +53,7 @@ export default function Signup() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Enter your password"
               required
             />
@@ -67,14 +67,14 @@ export default function Signup() {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#4A90E2] focus:outline-none"
+              className="w-full px-4 py-2 border rounded-md bg-[#F7F9FC] text-[#2C3E50] focus:ring-2 focus:ring-[#2C3E50] focus:outline-none"
               placeholder="Re-enter your password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-[#4A90E2] hover:bg-[#3A7BCC] text-white font-medium py-2 rounded-md transition duration-200"
+            className="w-full bg-[#2C3E50] hover:bg-[#484d53] text-white font-medium py-2 rounded-md transition duration-200"
           >
             Sign Up
           </button>

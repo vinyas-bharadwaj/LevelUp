@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/users/", {
+      const response = await fetch("http://127.0.0.1:8000/users/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     formData.append("password", (e.target as HTMLFormElement).password.value);
 
     try {
-      const response = await fetch("http://localhost:8000/login/", {
+      const response = await fetch("http://127.0.0.1:8000/login/", {
         method: "POST",
         body: formData
       });

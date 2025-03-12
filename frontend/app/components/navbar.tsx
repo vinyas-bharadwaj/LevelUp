@@ -35,7 +35,7 @@ const Navbar = () => {
               <div className="flex items-center space-x-3">
                 <Link 
                   href="/profile" 
-                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#4A90E2] text-[#4A90E2] hover:bg-[#4A90E2] hover:text-white transition duration-150 ease-in-out flex items-center"
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#2C3E50] text-[#2C3E50] hover:bg-[#3d4a57] hover:text-white transition duration-150 ease-in-out flex items-center"
                 >
                   <User className="w-5 h-5 inline-block mr-2" />
                   Profile
@@ -52,14 +52,14 @@ const Navbar = () => {
               <>
                 <Link 
                   href="/login" 
-                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#4A90E2] text-[#4A90E2] hover:bg-[#4A90E2] hover:text-white transition duration-150 ease-in-out flex items-center"
+                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#2C3E50] text-[#2C3E50] hover:bg-[#3a3f45] hover:text-white transition duration-150 ease-in-out flex items-center"
                 >
                   <LogIn className="w-5 h-5 inline-block mr-2" />
                   Login
                 </Link>
                 <Link 
                   href="/signup" 
-                  className="px-4 py-2 text-sm font-medium rounded-md border border-[#27AE60] text-[#27AE60] hover:bg-[#27AE60] hover:text-white transition duration-150 ease-in-out flex items-center"
+                  className="px-4 py-2 text-sm font-medium rounded-md border bg-[#2C3E50] text-white hover:bg-[#606266] hover:text-white transition duration-150 ease-in-out flex items-center"
                 >
                   <UserPlus className="w-5 h-5 inline-block mr-2" />
                   Sign Up

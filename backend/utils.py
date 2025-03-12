@@ -25,6 +25,9 @@ def verify(plain_password, hashed_password):
 
 # Agent-related functions
 async def generate_questions(text: str, num_questions: int = 5, difficulty: str = 'easy') -> List[ResponseQuestions]:
+    """
+    Generates multiple-choice questions based on the given text.
+    """
     model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
     agent = Agent(
         model, 
@@ -51,8 +54,6 @@ def extract_text_from_file(file: UploadFile) -> str:
     if file.filename.endswith(".pdf"):
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(file.file.read()))
         content = "\n".join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
-        print("-----------content-------------")
-        print(content)
     
     elif file.filename.endswith(".docx"):
         doc = docx.Document(io.BytesIO(file.file.read()))

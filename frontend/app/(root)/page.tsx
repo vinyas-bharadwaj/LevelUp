@@ -12,11 +12,11 @@ export default function Home() {
       </p>
       <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
         <Link
-          href="/courses"
+          href="/summaries/create"
           className="inline-flex items-center px-6 py-3 text-lg font-medium rounded-md text-white bg-[#354554] hover:bg-[#4f5862] transition duration-200 border-2 border-gray-800"
         >
           <Book className="w-6 h-6 mr-2" />
-          Browse Courses
+          Summarize Document
         </Link>
         <Link
           href="/questions/create"

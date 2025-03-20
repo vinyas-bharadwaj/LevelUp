@@ -46,3 +46,15 @@ class ResponseQuestions(BaseModel):
     option_c: str
     option_d: str
     answer: str
+
+class SummaryResponse(BaseModel):
+    id: int
+    content: str
+    original_filename: Optional[str]
+    word_count: int
+    detail_level: str
+    created_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }

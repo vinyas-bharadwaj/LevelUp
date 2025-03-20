@@ -43,6 +43,27 @@ async def generate_questions(text: str, num_questions: int = 5, difficulty: str 
     return response.data
 
 
+async def summarize_text(text: str, word_length: int = 150, detail_level: str = 'medium') -> str:
+    """
+    Summarizes the provided text based on specified word length and detail level.
+    """
+    model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
+    agent = Agent(
+        model,
+        result_type=str,
+        system_prompt=(
+            f"You are an expert summarizer. Create a clear and concise summary of the following text "
+            f"in approximately {word_length} words. "
+            f"The summary should be at a {detail_level} level of detail, where 'low' means only key points, "
+            f"'medium' means important details and main ideas, and 'high' means comprehensive coverage of significant details. "
+            f"Maintain the original meaning and include the most important information from the text."
+        )
+    )
+    
+    response = await agent.run(text)
+    return response.data
+
+
 # Extracting text from files
 def extract_text_from_file(file: UploadFile) -> str:
     """

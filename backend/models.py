@@ -17,6 +17,9 @@ class User(Base):
     # Establish relationship with Test model
     tests = relationship("Test", back_populates="user")
 
+    # Establish relationship with Summary model
+    summaries = relationship("Summary", back_populates="user")
+
 
 class Question(Base):
     __tablename__ = "questions"
@@ -46,3 +49,18 @@ class Test(Base):
 
     # Relationship with Question
     questions = relationship("Question", back_populates="test", cascade="all, delete")
+
+
+class Summary(Base):
+    __tablename__ = "summaries"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content = Column(Text, nullable=False)
+    original_filename = Column(String, nullable=True)
+    word_count = Column(Integer, nullable=False)
+    detail_level = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)  
+
+    # Relationship with User
+    user = relationship("User", back_populates="summaries")

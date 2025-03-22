@@ -37,13 +37,24 @@ async def get_questions(
     """
     Generate multiple-choice questions based on the contents of the uploaded file and store them in the database under a test.
     The test is associated with the authenticated user.
+    
+    - **file**: Document containing content for question generation
+    - **num_questions**: Number of questions to generate
+    - **difficulty**: Difficulty level of the questions
+    - **test_title**: Title for the test
+    - **description**: Optional description for the test
     """
     try:
         extracted_text = extract_text_from_file(file)
         questions_data = await generate_questions(extracted_text, num_questions, difficulty)
 
-        # Create a new test entry associated with the authenticated user
-        new_test = Test(title=test_title, user_id=current_user.id)
+        # Create a new test entry associated with the authenticated user with the new fields
+        new_test = Test(
+            title=test_title,
+            num_questions=num_questions,
+            difficulty=difficulty.value,  # Store the string value from the enum
+            user_id=current_user.id
+        )
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
@@ -68,6 +79,7 @@ async def get_questions(
         return {"questions": questions_data, "test_id": new_test.id}
 
     except Exception as e:
+        db.rollback()  # Add rollback in case of error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 

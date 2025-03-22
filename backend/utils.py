@@ -52,11 +52,26 @@ async def summarize_text(text: str, word_length: int = 150, detail_level: str = 
         model,
         result_type=str,
         system_prompt=(
-            f"You are an expert summarizer. Create a clear and concise summary of the following text "
-            f"in approximately {word_length} words. "
+            f"You are an expert summarizer who specializes in creating well-structured markdown documents. "
+            f"Create a clear, organized summary of the following text in approximately {word_length} words. "
             f"The summary should be at a {detail_level} level of detail, where 'low' means only key points, "
             f"'medium' means important details and main ideas, and 'high' means comprehensive coverage of significant details. "
-            f"Maintain the original meaning and include the most important information from the text."
+            
+            f"Structure your response using these markdown formatting guidelines:\n"
+            f"1. Begin with a level-1 heading (# ) for the main title\n"
+            f"2. Use level-2 headings (## ) for major sections\n" 
+            f"3. Use level-3 headings (### ) for subsections\n"
+            f"4. Use bullet points (- ) for listing related items\n"
+            f"5. Use numbered lists (1. ) for sequential or prioritized information\n"
+            f"6. Use **bold text** for emphasis on key terms or concepts\n"
+            f"7. Use *italics* for definitions or secondary emphasis\n"
+            f"8. Use > blockquotes for important quotations or takeaways\n"
+            f"9. Use horizontal rules (---) to separate major sections when appropriate\n"
+            f"10. Use tables for comparing information when relevant\n\n"
+            
+            f"Maintain the original meaning and include the most important information from the text. "
+            f"Create a logical hierarchy with clear sections and subsections. "
+            f"Be comprehensive but concise, focusing on the most significant concepts."
         )
     )
     

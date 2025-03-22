@@ -273,7 +273,7 @@ export default function ProfilePage() {
                       className="bg-white rounded-xl shadow-md hover:shadow-lg duration-200 cursor-pointer overflow-hidden transform hover:-translate-y-1 hover:scale-[1.02] transition-transform"
                       onClick={() => handleSummaryClick(summary.id)}
                     >
-                      <div className="h-2 bg-[#4A90E2]"></div>
+                      <div className="h-2 bg-[#2C3E50]"></div>
                       <div className="p-6">
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="text-lg font-semibold truncate">
@@ -291,7 +291,7 @@ export default function ProfilePage() {
                             {formatDate(summary.created_at)}
                           </span>
                           <button
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-[#4A90E2] hover:bg-[#3a7ac4] transition duration-200"
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-[#2C3E50] hover:bg-[#434d58] transition duration-200"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleSummaryClick(summary.id);

@@ -42,6 +42,9 @@ class Test(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String, nullable=False)
+    num_questions = Column(Integer, nullable=False) 
+    difficulty = Column(String, nullable=False)  
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)  
 
     # Relationship with User

@@ -2,6 +2,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Alert from '@/app/components/alert'
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+import remarkGfm from 'remark-gfm'
+import { FileText, Calendar, Tag, BarChart2, Trash2, ChevronLeft, Plus, Download, Share } from 'lucide-react'
 
 interface Summary {
   id: number
@@ -12,7 +17,7 @@ interface Summary {
   created_at: string
 }
 
-export default function SummaryPage() {
+const SummaryPageContent = () => {
   const params = useParams()
   const router = useRouter()
   const [summary, setSummary] = useState<Summary | null>(null)
@@ -98,7 +103,7 @@ export default function SummaryPage() {
       })
       
       if (response.ok) {
-        router.push('/summaries')
+        router.push('/profile')
       } else {
         setError('Failed to delete summary')
       }
@@ -106,6 +111,11 @@ export default function SummaryPage() {
       console.error('Error deleting summary:', err)
       setError('An error occurred while deleting the summary')
     }
+  }
+  
+  const handleExportAsPDF = () => {
+    // Placeholder for PDF export functionality
+    window.print();
   }
   
   if (loading) {
@@ -123,7 +133,7 @@ export default function SummaryPage() {
         <div className="mt-4">
           <button
             onClick={() => router.push('/profile')}
-            className="px-4 py-2 bg-[#2C3E50] text-white rounded hover:bg-[#44505c]"
+            className="px-4 py-2 bg-[#2C3E50] text-white rounded hover:bg-[#44505c] border-2 border-gray-800"
           >
             Back to Profile
           </button>
@@ -145,56 +155,100 @@ export default function SummaryPage() {
   
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-2 border-gray-800">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">Summary</h1>
-            <p className="text-sm text-gray-600">
-              From: {summary.original_filename} • Created on {formattedDate}
-            </p>
-            <div className="flex gap-2 mt-2">
-              <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100">
-                {summary.detail_level} detail
-              </span>
-              <span className="inline-block px-2 py-1 text-xs rounded bg-gray-100">
-                ~{summary.word_count} words
-              </span>
+            <h1 className="text-2xl font-bold mb-2 text-[#2C3E50]">Summary</h1>
+            <div className="flex flex-wrap gap-2 items-center text-sm text-[#4A4A4A]">
+              <div className="flex items-center">
+                <FileText size={16} className="mr-1" />
+                <span>{summary.original_filename || 'Unnamed document'}</span>
+              </div>
+              <span className="text-gray-400">•</span>
+              <div className="flex items-center">
+                <Calendar size={16} className="mr-1" />
+                <span>{formattedDate}</span>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <div className="flex items-center px-2 py-1 text-xs rounded bg-[#E0E6ED] text-[#2C3E50] border border-gray-800">
+                <Tag size={12} className="mr-1" />
+                <span>{summary.detail_level} detail</span>
+              </div>
+              <div className="flex items-center px-2 py-1 text-xs rounded bg-[#E0E6ED] text-[#2C3E50] border border-gray-800">
+                <BarChart2 size={12} className="mr-1" />
+                <span>~{summary.word_count} words</span>
+              </div>
             </div>
           </div>
-          <button 
-            onClick={handleDelete}
-            className="text-red-500 hover:text-red-700"
-            title="Delete summary"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleExportAsPDF}
+              className="flex items-center text-[#2C3E50] hover:text-[#44505c] border-2 border-gray-800 rounded px-3 py-1.5 transition-colors"
+              title="Export as PDF"
+            >
+              <Download size={16} className="mr-1.5" />
+              <span>Export</span>
+            </button>
+            <button 
+              onClick={handleDelete}
+              className="flex items-center text-red-500 hover:text-red-700 border-2 border-red-300 hover:border-red-500 rounded px-3 py-1.5 transition-colors"
+              title="Delete summary"
+            >
+              <Trash2 size={16} className="mr-1.5" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
         
-        <div className="mt-6 prose prose-slate max-w-none">
-          {summary.content.split('\n').map((paragraph, index) => (
-            <p key={index} className="mb-4">{paragraph}</p>
-          ))}
+        {/* Enhanced markdown container with print-friendly styling */}
+        <div className="mt-6 px-6 py-6 bg-[#F8FAFC] rounded-lg border-2 border-gray-800" id="markdown-content">
+          <article className="prose prose-lg max-w-none
+            prose-headings:text-[#2C3E50] 
+            prose-h1:text-2xl prose-h1:font-bold prose-h1:border-b prose-h1:border-gray-300 prose-h1:pb-2
+            prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-6 
+            prose-h3:text-lg prose-h3:font-medium
+            prose-p:text-[#4A4A4A] prose-p:leading-relaxed
+            prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+            prose-blockquote:border-l-4 prose-blockquote:border-[#2C3E50] prose-blockquote:bg-[#E0E6ED] prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:italic
+            prose-ul:list-disc prose-ul:pl-5
+            prose-ol:list-decimal prose-ol:pl-5
+            prose-li:my-1
+            prose-table:border-collapse prose-table:w-full
+            prose-th:bg-[#E0E6ED] prose-th:text-[#2C3E50] prose-th:p-2 prose-th:font-medium prose-th:border prose-th:border-gray-300
+            prose-td:border prose-td:border-gray-300 prose-td:p-2
+            prose-hr:my-6 prose-hr:border-t prose-hr:border-gray-300
+            prose-strong:font-bold prose-strong:text-[#2C3E50]
+            prose-em:italic"
+          >
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]} 
+              rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            >
+              {summary.content}
+            </ReactMarkdown>
+          </article>
         </div>
       </div>
       
       <div className="flex justify-between">
         <button
           onClick={() => router.push('/profile')}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          className="flex items-center px-4 py-2 bg-[#E0E6ED] text-[#2C3E50] rounded hover:bg-[#CCD6E0] transition-colors border-2 border-gray-800"
         >
+          <ChevronLeft size={18} className="mr-1" />
           Back to Profile
         </button>
         <button
           onClick={() => router.push('/summaries/create')}
-          className="px-4 py-2 bg-[#2C3E50] text-white rounded hover:bg-[#44505c]"
+          className="flex items-center px-4 py-2 bg-[#354554] text-white rounded hover:bg-[#4f5862] transition-colors border-2 border-gray-800"
         >
+          <Plus size={18} className="mr-1" />
           Create New Summary
         </button>
       </div>
     </div>
   )
 }
+
+export default SummaryPageContent;

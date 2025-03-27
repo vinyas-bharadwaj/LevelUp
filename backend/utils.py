@@ -24,34 +24,33 @@ def verify(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 # Agent-related functions
-async def generate_questions(text: str, num_questions: int = 5, difficulty: str = 'easy') -> List[ResponseQuestions]:
-    """
-    Generates multiple-choice questions based on the given text.
-    """
-    model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
-    agent = Agent(
-        model, 
-        result_type=List[ResponseQuestions],
-        system_prompt=(
-            f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {text} '
-            'Each question should have four options (a, b, c, d) and a correct answer.'
-            f'Make sure the difficulty of each question is {difficulty}'
+class GeminiAgent:
+    def __init__(self):
+        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
+
+    async def generate_questions(self, text: str, num_questions: int = 5, difficulty: str = 'easy') -> List[ResponseQuestions]:
+        """
+        Generates multiple-choice questions based on the given text.
+        """
+        agent = Agent(
+            self.model,
+            result_type=List[ResponseQuestions],
+            system_prompt=(f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {text} '
+                           'Each question should have four options (a, b, c, d) and a correct answer.'
+                           f'Make sure the difficulty of each question is {difficulty}')
         )
-    )
 
-    response = await agent.run(text)  
-    return response.data
-
-
-async def summarize_text(text: str, word_length: int = 150, detail_level: str = 'medium') -> str:
-    """
-    Summarizes the provided text based on specified word length and detail level.
-    """
-    model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
-    agent = Agent(
-        model,
-        result_type=str,
-        system_prompt=(
+        response = await agent.run(text)
+        return response.data
+    
+    async def summarize_text(self, text: str, word_length: int = 150, detail_level: str = 'medium') -> str:
+        """
+        Summarizes the provided text based on specified word length and detail level.
+        """
+        agent = Agent(
+            self.model,
+            result_type=str,
+            system_prompt=(
             f"You are an expert summarizer who specializes in creating well-structured markdown documents. "
             f"Create a clear, organized summary of the following text in approximately {word_length} words. "
             f"The summary should be at a {detail_level} level of detail, where 'low' means only key points, "
@@ -72,11 +71,17 @@ async def summarize_text(text: str, word_length: int = 150, detail_level: str = 
             f"Maintain the original meaning and include the most important information from the text. "
             f"Create a logical hierarchy with clear sections and subsections. "
             f"Be comprehensive but concise, focusing on the most significant concepts."
+            )
         )
-    )
-    
-    response = await agent.run(text)
-    return response.data
+        
+        response = await agent.run(text)
+        return response.data
+
+def get_gemini_agent():
+    """
+    Returns an instance of the GeminiAgent.
+    """
+    return GeminiAgent()
 
 
 # Extracting text from files

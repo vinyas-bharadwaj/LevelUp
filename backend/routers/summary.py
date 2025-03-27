@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, Depends
-from utils import summarize_text, extract_text_from_file
+from utils import GeminiAgent, get_gemini_agent, extract_text_from_file
 from typing import Optional, List
 from schemas import SummaryResponse
 from sqlalchemy.orm import Session
@@ -25,7 +25,8 @@ async def summarize(
         description="Level of detail (low, medium, high)"
     ),
     current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    agent: GeminiAgent = Depends(get_gemini_agent)  # Dependency injection for the agent
 ):
     """
     Summarize text from an uploaded file.
@@ -52,7 +53,7 @@ async def summarize(
             )
         
         # Generate summary
-        summary_content = await summarize_text(
+        summary_content = await agent.summarize_text(
             text=text,
             word_length=word_length,
             detail_level=detail_level

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, D
 from typing import List, Union, Dict
 from enum import Enum
 from sqlalchemy.orm import Session
-from utils import generate_questions, extract_text_from_file
+from utils import get_gemini_agent, extract_text_from_file, GeminiAgent
 from schemas import ResponseQuestions
 from models import Question, Test, User
 from database import get_db, init_db
@@ -32,7 +32,8 @@ async def get_questions(
     difficulty: Difficulty = Query(..., title="Difficulty"),
     test_title: str = Query(..., title="Test Title"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # Get the logged-in user
+    current_user: User = Depends(get_current_user),  # Get the logged-in user
+    agent: GeminiAgent = Depends(get_gemini_agent)  # Dependency injection for the agent
 ):
     """
     Generate multiple-choice questions based on the contents of the uploaded file and store them in the database under a test.
@@ -46,7 +47,7 @@ async def get_questions(
     """
     try:
         extracted_text = extract_text_from_file(file)
-        questions_data = await generate_questions(extracted_text, num_questions, difficulty)
+        questions_data = await agent.generate_questions(extracted_text, num_questions, difficulty)
 
         # Create a new test entry associated with the authenticated user with the new fields
         new_test = Test(

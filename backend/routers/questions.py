@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, D
 from typing import List, Union, Dict
 from enum import Enum
 from sqlalchemy.orm import Session
-from utils import get_gemini_agent, extract_text_from_file, GeminiAgent
+from utils import get_summary_question_generator_agent, extract_text_from_file, SummaryQuestionGeneratorAgent
 from schemas import ResponseQuestions
 from models import Question, Test, User
 from database import get_db, init_db
@@ -13,8 +13,6 @@ router = APIRouter(
     prefix='/questions',
     tags=['questions']
 )
-
-init_db()
 
 class Difficulty(str, Enum):
     beginner = "beginner"
@@ -33,7 +31,7 @@ async def get_questions(
     test_title: str = Query(..., title="Test Title"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),  # Get the logged-in user
-    agent: GeminiAgent = Depends(get_gemini_agent)  # Dependency injection for the agent
+    agent: SummaryQuestionGeneratorAgent = Depends(get_summary_question_generator_agent)  # Dependency injection for the agent
 ):
     """
     Generate multiple-choice questions based on the contents of the uploaded file and store them in the database under a test.

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Query, File, UploadFile, HTTPException, status, Depends
-from utils import GeminiAgent, get_gemini_agent, extract_text_from_file
+from utils import SummaryQuestionGeneratorAgent, get_summary_question_generator_agent, extract_text_from_file
 from typing import Optional, List
 from schemas import SummaryResponse
 from sqlalchemy.orm import Session
-from database import get_db, init_db
+from database import get_db
 import models
 from oauth2 import get_current_user
 
@@ -12,9 +12,6 @@ router = APIRouter(
     prefix='/summary',
     tags=['summary']
 )
-
-init_db()
-
 
 @router.post("/generate-summary", response_model=SummaryResponse)
 async def summarize(
@@ -26,7 +23,7 @@ async def summarize(
     ),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    agent: GeminiAgent = Depends(get_gemini_agent)  # Dependency injection for the agent
+    agent: SummaryQuestionGeneratorAgent = Depends(get_summary_question_generator_agent)  # Dependency injection for the agent
 ):
     """
     Summarize text from an uploaded file.

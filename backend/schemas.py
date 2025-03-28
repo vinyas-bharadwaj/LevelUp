@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 class BasePost(BaseModel):
@@ -55,6 +55,47 @@ class SummaryResponse(BaseModel):
     detail_level: str
     created_at: datetime
 
+    model_config = {
+        "from_attributes": True
+    }
+
+class StudyPlanRequest(BaseModel):
+    topic: str
+
+class StudyPlanResource(BaseModel):
+    title: str
+    url: str
+    description: str
+    type: str
+
+class StudyPlanSection(BaseModel):
+    title: str
+    description: str
+    topics: List[str] = []
+    resources: List[StudyPlanResource] = []
+    activities: List[str] = []
+    estimated_time: str
+    assessment_methods: List[str] = []
+
+class StudyPlanResponse(BaseModel):
+    id: int
+    topic: str
+    overview: str
+    learning_objectives: List[str]
+    sections: List[StudyPlanSection]
+    total_estimated_time: str
+    created_at: datetime
+    
+    model_config = {
+        "from_attributes": True
+    }
+
+class QuickReferenceResponse(BaseModel):
+    id: int
+    topic: str
+    content: str
+    created_at: datetime
+    
     model_config = {
         "from_attributes": True
     }

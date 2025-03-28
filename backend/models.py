@@ -20,6 +20,9 @@ class User(Base):
     # Establish relationship with Summary model
     summaries = relationship("Summary", back_populates="user")
 
+    # Establish relationship with StudyPlan model
+    studyplans = relationship("StudyPlan", back_populates="user")
+
 
 class Question(Base):
     __tablename__ = "questions"
@@ -67,3 +70,17 @@ class Summary(Base):
 
     # Relationship with User
     user = relationship("User", back_populates="summaries")
+
+
+class StudyPlan(Base):
+    __tablename__ = "studyplans"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    topic = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    quick_reference = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp(), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Relationship with User
+    user = relationship("User", back_populates="studyplans")

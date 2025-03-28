@@ -4,7 +4,7 @@ from fastapi import UploadFile, HTTPException
 from passlib.context import CryptContext
 from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai import Agent
-from typing import List, Optional
+from typing import List
 import PyPDF2
 import docx
 import io
@@ -12,7 +12,7 @@ import json
 import os
 from dotenv import load_dotenv
 from schemas import ResponseQuestions
-from pydantic import BaseModel, Field
+from schemas import StudyPlanData
 
 # Set the debug mode on
 pydantic_ai_settings.debug = True
@@ -121,28 +121,6 @@ def get_summary_question_generator_agent():
     """
     return SummaryQuestionGeneratorAgent()
 
-class StudyPlanResource(BaseModel):
-    title: str
-    url: str
-    description: str
-    type: str
-
-class StudyPlanSection(BaseModel):
-    title: str
-    description: str
-    topics: List[str] = []
-    resources: List[StudyPlanResource] = []
-    activities: List[str] = []
-    estimated_time: str
-    assessment_methods: List[str] = []
-
-class StudyPlanData(BaseModel):
-    topic: str
-    overview: str
-    learning_objectives: List[str]
-    sections: List[StudyPlanSection]
-    total_estimated_time: str
-    error: Optional[str] = None
 
 class StudyPlanAgent:
     def __init__(self):

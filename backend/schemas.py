@@ -99,3 +99,26 @@ class QuickReferenceResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class StudyPlanResource(BaseModel):
+    title: str
+    url: str
+    description: str
+    type: str
+
+class StudyPlanSection(BaseModel):
+    title: str
+    description: str
+    topics: List[str] = []
+    resources: List[StudyPlanResource] = []
+    activities: List[str] = []
+    estimated_time: str
+    assessment_methods: List[str] = []
+
+class StudyPlanData(BaseModel):
+    topic: str
+    overview: str
+    learning_objectives: List[str]
+    sections: List[StudyPlanSection]
+    total_estimated_time: str
+    error: Optional[str] = None

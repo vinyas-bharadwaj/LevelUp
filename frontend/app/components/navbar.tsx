@@ -3,7 +3,7 @@
 import React, { useContext } from "react";
 import Link from "next/link";
 import AuthContext from "@/app/context/AuthContext";
-import { Book, Video, FileCheck, LogIn, UserPlus, LogOut, User } from "lucide-react";
+import { Book, Map, Video, LogIn, UserPlus, LogOut, User } from "lucide-react";
 
 // NavLink component
 const NavLink = ({ href, icon, children }: { href: string; icon?: React.ReactNode; children: React.ReactNode }) => (
@@ -29,7 +29,7 @@ const Navbar = () => {
           <div className="hidden sm:flex items-center space-x-3">
             <NavLink href="/courses" icon={<Book className="w-5 h-5" />}>Courses</NavLink>
             <NavLink href="/tutorials" icon={<Video className="w-5 h-5" />}>Tutorials</NavLink>
-            <NavLink href="/tests" icon={<FileCheck className="w-5 h-5" />}>Tests</NavLink>
+            <NavLink href="/roadmaps/create" icon={<Map className="w-5 h-5" />}>Roadmap</NavLink>
 
             {user ? (
               <div className="flex items-center space-x-3">

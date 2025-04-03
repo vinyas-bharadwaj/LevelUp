@@ -1,4 +1,4 @@
-import TestPortal from '@/app/(root)/questions/[id]/TestPortal';
+import TestPortal from '@/app/(root)/(text-generation)/questions/[id]/TestPortal';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

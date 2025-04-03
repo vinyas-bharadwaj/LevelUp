@@ -4,6 +4,7 @@ import React, { useContext } from "react";
 import Link from "next/link";
 import AuthContext from "@/app/context/AuthContext";
 import { Book, Map, Video, LogIn, UserPlus, LogOut, User } from "lucide-react";
+import LevelUpLogo from "./LevelUpLogo";
 
 // NavLink component
 const NavLink = ({ href, icon, children }: { href: string; icon?: React.ReactNode; children: React.ReactNode }) => (
@@ -24,6 +25,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <Link href="/" className="flex-shrink-0 flex items-center">
+            <LevelUpLogo width={36} height={36} />
             <span className="ml-2 text-2xl font-bold text-[#2C3E50]">LevelUp</span>
           </Link>
           <div className="hidden sm:flex items-center space-x-3">

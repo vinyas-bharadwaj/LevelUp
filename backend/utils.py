@@ -61,74 +61,8 @@ def extract_text_from_file(file: UploadFile) -> str:
 
     return content
 
-# Agent-related 
-class SummaryQuestionGeneratorAgent:
-    def __init__(self):
-        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
-
-    async def generate_questions(self, text: str, num_questions: int = 5, difficulty: str = 'easy') -> List[ResponseQuestions]:
-        """
-        Generates multiple-choice questions based on the given text.
-        """
-        agent = Agent(
-            self.model,
-            result_type=List[ResponseQuestions],
-            system_prompt=(f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {text} '
-                           'Each question should have four options (a, b, c, d) and a correct answer.'
-                           f'Make sure the difficulty of each question is {difficulty}')
-        )
-
-        response = await agent.run(text)
-        return response.data
-    
-    async def summarize_text(self, text: str, word_length: int = 150, detail_level: str = 'medium') -> str:
-        """
-        Summarizes the provided text based on specified word length and detail level.
-        """
-        agent = Agent(
-            self.model,
-            result_type=str,
-            system_prompt=(
-            f"You are an expert summarizer who specializes in creating well-structured markdown documents. "
-            f"Create a clear, organized summary of the following text in approximately {word_length} words. "
-            f"The summary should be at a {detail_level} level of detail, where 'low' means only key points, "
-            f"'medium' means important details and main ideas, and 'high' means comprehensive coverage of significant details. "
-            
-            f"Structure your response using these markdown formatting guidelines:\n"
-            f"1. Begin with a level-1 heading (# ) for the main title\n"
-            f"2. Use level-2 headings (## ) for major sections\n" 
-            f"3. Use level-3 headings (### ) for subsections\n"
-            f"4. Use bullet points (- ) for listing related items\n"
-            f"5. Use numbered lists (1. ) for sequential or prioritized information\n"
-            f"6. Use **bold text** for emphasis on key terms or concepts\n"
-            f"7. Use *italics* for definitions or secondary emphasis\n"
-            f"8. Use > blockquotes for important quotations or takeaways\n"
-            f"9. Use horizontal rules (---) to separate major sections when appropriate\n"
-            f"10. Use tables for comparing information when relevant\n\n"
-            
-            f"Maintain the original meaning and include the most important information from the text. "
-            f"Create a logical hierarchy with clear sections and subsections. "
-            f"Be comprehensive but concise, focusing on the most significant concepts."
-            )
-        )
-        
-        response = await agent.run(text)
-        return response.data
-
-def get_summary_question_generator_agent():
-    """
-    Returns an instance of the SummaryQuestionGeneratorAgent.
-    """
-    return SummaryQuestionGeneratorAgent()
-
-
-class StudyPlanAgent:
-    def __init__(self):
-        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-    
+# Scraping the web for RAG
+class WebScraper:
     async def search_web(self, query: str, num_results: int = 5) -> List[dict]:
         """
         Search the web for relevant information on the topic
@@ -218,6 +152,128 @@ class StudyPlanAgent:
         except Exception as e:
             print(f"Error extracting content from {url}: {str(e)}")
             return ""
+
+
+# Agent-related 
+class SummaryQuestionGeneratorAgent:
+    def __init__(self):
+        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
+        self.web_scraper = WebScraper()
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+    async def _enhance_with_web_content(self, text: str, topic: str = None) -> str:
+        """
+        Enhances the input text with relevant web content for RAG.
+        """
+        if not topic:
+            # Extract a topic from the text if none provided
+            topic = text.split(".")[0] if "." in text else text[:50]
+        
+        # Search the web for additional information
+        search_results = await self.web_scraper.search_web(topic, num_results=3)
+        
+        # Extract content from search results
+        additional_content = []
+        for result in search_results:
+            content = await self.web_scraper.extract_content_from_url(result['url'], max_chars=2000)
+            if content:
+                additional_content.append({
+                    "source": result['url'],
+                    "title": result['title'],
+                    "content": content
+                })
+        
+        # Combine original text with additional content
+        enhanced_text = text + "\n\n" + "\n\n".join([
+            f"Additional information from {item['title']}:\n{item['content'][:1000]}" 
+            for item in additional_content
+        ])
+        
+        return enhanced_text
+
+    async def generate_questions(self, text: str, num_questions: int = 5, difficulty: str = 'easy', use_rag: bool = True, topic: str = None) -> List[ResponseQuestions]:
+        """
+        Generates multiple-choice questions based on the given text.
+        If use_rag is True, enhances the input with web content.
+        """
+        # Enhance with RAG if requested
+        if use_rag:
+            enhanced_text = await self._enhance_with_web_content(text, topic)
+        else:
+            enhanced_text = text
+            
+        agent = Agent(
+            self.model,
+            result_type=List[ResponseQuestions],
+            system_prompt=(
+                f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {enhanced_text} '
+                'Each question should have four options (a, b, c, d) and a correct answer.'
+                f'Make sure the difficulty of each question is {difficulty}. '
+                f'Focus your questions on the core text provided, using the additional information only for context and enrichment.'
+            )
+        )
+
+        response = await agent.run(enhanced_text)
+        return response.data
+    
+    async def summarize_text(self, text: str, word_length: int = 150, detail_level: str = 'medium', use_rag: bool = True, topic: str = None) -> str:
+        """
+        Summarizes the provided text based on specified word length and detail level.
+        If use_rag is True, enhances the input with web content.
+        """
+        # Enhance with RAG if requested
+        if use_rag:
+            enhanced_text = await self._enhance_with_web_content(text, topic)
+        else:
+            enhanced_text = text
+            
+        agent = Agent(
+            self.model,
+            result_type=str,
+            system_prompt=(
+                f"You are an expert summarizer who specializes in creating well-structured markdown documents. "
+                f"Create a clear, organized summary of the following text in approximately {word_length} words. "
+                f"The summary should be at a {detail_level} level of detail, where 'low' means only key points, "
+                f"'medium' means important details and main ideas, and 'high' means comprehensive coverage of significant details. "
+                
+                f"Structure your response using these markdown formatting guidelines:\n"
+                f"1. Begin with a level-1 heading (# ) for the main title\n"
+                f"2. Use level-2 headings (## ) for major sections\n" 
+                f"3. Use level-3 headings (### ) for subsections\n"
+                f"4. Use bullet points (- ) for listing related items\n"
+                f"5. Use numbered lists (1. ) for sequential or prioritized information\n"
+                f"6. Use **bold text** for emphasis on key terms or concepts\n"
+                f"7. Use *italics* for definitions or secondary emphasis\n"
+                f"8. Use > blockquotes for important quotations or takeaways\n"
+                f"9. Use horizontal rules (---) to separate major sections when appropriate\n"
+                f"10. Use tables for comparing information when relevant\n\n"
+                
+                f"Maintain the original meaning and include the most important information from the text. "
+                f"Create a logical hierarchy with clear sections and subsections. "
+                f"Be comprehensive but concise, focusing on the most significant concepts. "
+                f"While using supplementary information for context, prioritize the original text in your summary."
+            )
+        )
+        
+        response = await agent.run(enhanced_text)
+        return response.data
+
+def get_summary_question_generator_agent():
+    """
+    Returns an instance of the SummaryQuestionGeneratorAgent.
+    """
+    return SummaryQuestionGeneratorAgent()
+
+
+
+class StudyPlanAgent:
+    def __init__(self):
+        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
     
     async def generate_study_plan(self, topic: str) -> StudyPlanData:
         """

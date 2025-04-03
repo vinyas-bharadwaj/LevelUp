@@ -73,9 +73,9 @@ export default function QuickReferencePage() {
   
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
+      <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-8"></div>
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
           <div className="h-[600px] bg-gray-200 rounded"></div>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function QuickReferencePage() {
   // Not logged in warning
   if (!user) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
+      <div className="container mx-auto px-4 py-8">
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -99,7 +99,7 @@ export default function QuickReferencePage() {
               <div className="mt-4">
                 <Link
                   href="/login"
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Login
                 </Link>
@@ -113,7 +113,7 @@ export default function QuickReferencePage() {
   
   if (error || !reference) {
     return (
-      <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
+      <div className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border-l-4 border-red-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -127,7 +127,7 @@ export default function QuickReferencePage() {
               <div className="mt-4">
                 <button
                   onClick={() => window.history.back()}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
                   Go Back
                 </button>
@@ -140,31 +140,31 @@ export default function QuickReferencePage() {
   }
   
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
-      <div className="mb-6 flex items-center">
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
         <button
           onClick={() => router.push(`/roadmaps/${id}`)}
-          className="mr-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
         >
           <svg className="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Back to Roadmap
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">{reference.topic} - Quick Reference Guide</h1>
       </div>
       
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h2 className="text-lg leading-6 font-medium text-gray-900">Quick Reference</h2>
+      <h1 className="text-2xl font-bold mb-4">{reference.topic} - Quick Reference Guide</h1>
+      
+      <div className="bg-white shadow rounded">
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-medium">Quick Reference</h2>
         </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <div className="markdown-content prose prose-sm lg:prose-base xl:prose-lg max-w-none">
+        <div className="px-4 py-3">
+          <div className="prose prose-sm lg:prose-base max-w-none">
             {renderMarkdownContent(reference.content)}
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

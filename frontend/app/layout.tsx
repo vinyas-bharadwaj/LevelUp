@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LevelUp - Educational Platform",
+  title: "LevelUp",
   description: "Enhance your skills with LevelUp courses",
 };
 

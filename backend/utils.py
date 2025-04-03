@@ -274,6 +274,8 @@ class StudyPlanAgent:
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
+        self.web_scraper = WebScraper()
+
     
     async def generate_study_plan(self, topic: str) -> StudyPlanData:
         """
@@ -281,12 +283,12 @@ class StudyPlanAgent:
         """
         try:
             # Step 1: Search for relevant information
-            search_results = await self.search_web(topic, num_results=5)
+            search_results = await self.web_scraper.search_web(topic, num_results=5)
             
             # Step 2: Extract content from search results
             content_collection = []
             for result in search_results:
-                content = await self.extract_content_from_url(result['url'])
+                content = await self.web_scraper.extract_content_from_url(result['url'])
                 if content:
                     content_collection.append({
                         "source": result['url'],
@@ -358,12 +360,12 @@ class StudyPlanAgent:
         """
         try:
             # Get some basic information about the topic
-            search_results = await self.search_web(topic, num_results=3)
+            search_results = await self.web_scraper.search_web(topic, num_results=3)
             content = ""
             
             # Extract content from first result only for quick reference
             if search_results and len(search_results) > 0:
-                content = await self.extract_content_from_url(search_results[0]['url'], max_chars=3000)
+                content = await self.web_scraper.extract_content_from_url(search_results[0]['url'], max_chars=3000)
             
             agent = Agent(
                 self.model,

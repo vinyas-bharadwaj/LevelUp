@@ -202,7 +202,6 @@ export default function CreateRoadmapPage() {
             
             <div className="flex items-center justify-between pt-2">
               <p className="text-sm text-gray-500 italic flex items-center">
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                 Generation takes up to a minute
               </p>
               <button

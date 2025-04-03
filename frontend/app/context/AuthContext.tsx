@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, ReactNode } from "react";
+import React, { createContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Alert from "@/app/components/alert";
@@ -13,9 +13,9 @@ interface AuthTokens {
 interface User {
   username: string;
   email?: string;
+  exp?: number; // Add expiration timestamp from JWT
   // Add other user properties as needed
 }
-
 
 interface AuthContextType {
   user: User | null;
@@ -42,10 +42,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined" && authTokens) {
-      return jwtDecode<User>(authTokens.access_token);
+      try {
+        return jwtDecode<User>(authTokens.access_token);
+      } catch (error) {
+        console.error("Failed to decode token:", error);
+        return null;
+      }
     }
     return null;
   });
+
+  // Check if token is expired
+  const isTokenExpired = useCallback(() => {
+    if (!user || !user.exp) return true;
+    
+    // Get current time in seconds (JWT exp is in seconds)
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    // Add a buffer of 60 seconds to refresh the token before it actually expires
+    return user.exp - currentTime < 60;
+  }, [user]);
+
+  // Refresh token function
+  const refreshToken = useCallback(async () => {
+    if (!authTokens) return;
+    
+    // Store the current username from the decoded token
+    const username = user?.username;
+    
+    // We'll need to have stored the password somewhere secure or prompt the user to login again
+    // For security reasons, we cannot store the password in localStorage or state
+    
+    // Option 1: Redirect to login when token is about to expire
+    setAlertMessage("Your session is about to expire. Please login again.");
+    setAlertType("warning");
+    setTimeout(() => {
+      logoutUser();
+    }, 3000);
+  }, [authTokens, user]);
+
+  // Check token status periodically
+  useEffect(() => {
+    if (!authTokens) return;
+
+    // Initial check when component mounts
+    if (isTokenExpired()) {
+      refreshToken();
+    }
+
+    // Check every 5 minutes (or adjust based on your token lifespan)
+    // For a 30-minute token, maybe check every 5-10 minutes
+    const interval = setInterval(() => {
+      if (isTokenExpired()) {
+        refreshToken();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [authTokens, isTokenExpired, refreshToken]);
 
   // Signup Function
   const signupUser = async (e: React.FormEvent<HTMLFormElement>) => {

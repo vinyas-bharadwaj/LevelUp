@@ -193,41 +193,34 @@ class SummaryQuestionGeneratorAgent:
         
         return enhanced_text
 
-    async def generate_questions(self, text: str, num_questions: int = 5, difficulty: str = 'easy', use_rag: bool = True, topic: str = None) -> List[ResponseQuestions]:
+    async def generate_questions(self, text: str, num_questions: int = 5, difficulty: str = 'easy', topic: str = None) -> List[ResponseQuestions]:
         """
         Generates multiple-choice questions based on the given text.
         If use_rag is True, enhances the input with web content.
         """
-        # Enhance with RAG if requested
-        if use_rag:
-            enhanced_text = await self._enhance_with_web_content(text, topic)
-        else:
-            enhanced_text = text
-            
+
         agent = Agent(
             self.model,
             result_type=List[ResponseQuestions],
             system_prompt=(
-                f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {enhanced_text} '
+                f'You are a teacher tasked with creating {num_questions} multiple-choice questions on the following information: {text} '
                 'Each question should have four options (a, b, c, d) and a correct answer.'
                 f'Make sure the difficulty of each question is {difficulty}. '
                 f'Focus your questions on the core text provided, using the additional information only for context and enrichment.'
-            )
+                'Make use of the self._enhance_with_web_content function in order to retrieve additional information from the web.'
+                'The questions should be clear, concise, and relevant to the text.'
+            ),
+            tools=[self._enhance_with_web_content]
         )
 
-        response = await agent.run(enhanced_text)
+        response = await agent.run(text)
         return response.data
     
-    async def summarize_text(self, text: str, word_length: int = 150, detail_level: str = 'medium', use_rag: bool = True, topic: str = None) -> str:
+    async def summarize_text(self, text: str, word_length: int = 150, detail_level: str = 'medium', topic: str = None) -> str:
         """
         Summarizes the provided text based on specified word length and detail level.
         If use_rag is True, enhances the input with web content.
         """
-        # Enhance with RAG if requested
-        if use_rag:
-            enhanced_text = await self._enhance_with_web_content(text, topic)
-        else:
-            enhanced_text = text
             
         agent = Agent(
             self.model,
@@ -254,10 +247,12 @@ class SummaryQuestionGeneratorAgent:
                 f"Create a logical hierarchy with clear sections and subsections. "
                 f"Be comprehensive but concise, focusing on the most significant concepts. "
                 f"While using supplementary information for context, prioritize the original text in your summary."
-            )
+                "Make use of the self._enhance_with_web_content function in order to retrieve additional information from the web."
+            ),
+            tools=[self._enhance_with_web_content]
         )
         
-        response = await agent.run(enhanced_text)
+        response = await agent.run(text)
         return response.data
 
 def get_summary_question_generator_agent():
@@ -282,42 +277,9 @@ class StudyPlanAgent:
         Generates a comprehensive study plan for the given topic
         """
         try:
-            # Step 1: Search for relevant information
-            search_results = await self.web_scraper.search_web(topic, num_results=5)
-            
-            # Step 2: Extract content from search results
-            content_collection = []
-            for result in search_results:
-                content = await self.web_scraper.extract_content_from_url(result['url'])
-                if content:
-                    content_collection.append({
-                        "source": result['url'],
-                        "title": result['title'],
-                        "content": content[:2000]  # Limit content size for each source
-                    })
-            
-            # Replace the complex content_collection with a simpler representation
-            content_summary = "\n\n".join([
-                f"From {item['title']} ({item['source']}):\n{item['content'][:500]}..." 
-                for item in content_collection
-            ])
-
-            user_prompt = f"""
-            Create a comprehensive study plan for: {topic}
-
-            Here's a summary of information I've gathered from educational websites:
-
-            {content_summary}
-
-            Please generate a structured study plan that someone could follow to master this topic.
-            The study plan should include all the components mentioned in your instructions.
-            Make sure the plan is logical, progressive, and includes specific resources when possible.
-            """
-            
-            # Step 3: Use LLM to create the study plan
             agent = Agent(
                 self.model,
-                result_type=StudyPlanData,  # Use the Pydantic model instead of dict
+                result_type=StudyPlanData,  
                 system_prompt=(
                     "You are an expert educational consultant specialized in creating comprehensive study plans. "
                     "Analyze the provided information about the topic and create a detailed, structured learning path. "
@@ -334,12 +296,14 @@ class StudyPlanAgent:
                     
                     "The structure of your response should be well-organized with clear sections and subsections. "
                     "Make the plan adaptable for different learning styles."
-                )
+                    "Make use of the web_scraper.extract_content_from_url function in order to retrieve additional information from the web."
+                    "Make use of the web_scraper.search_web function in order to retrieve additional information from the web."
+                ),
+                tools=[self.web_scraper.extract_content_from_url, self.web_scraper.search_web]
             )
             
-            response = await agent.run(user_prompt)
+            response = await agent.run(topic)
             study_plan_data = response.data
-            study_plan_json = json.dumps(study_plan_data.model_dump())
             return study_plan_data
         
         except Exception as e:
@@ -359,14 +323,7 @@ class StudyPlanAgent:
         Generates a markdown-formatted quick reference guide for the given topic
         """
         try:
-            # Get some basic information about the topic
-            search_results = await self.web_scraper.search_web(topic, num_results=3)
-            content = ""
-            
-            # Extract content from first result only for quick reference
-            if search_results and len(search_results) > 0:
-                content = await self.web_scraper.extract_content_from_url(search_results[0]['url'], max_chars=3000)
-            
+
             agent = Agent(
                 self.model,
                 result_type=str,
@@ -382,20 +339,15 @@ class StudyPlanAgent:
                     
                     "The guide should be comprehensive yet concise, suitable for printing on 1-2 pages. "
                     "Use markdown formatting for clear structure: headings, tables, code blocks, etc."
-                )
+                    "Make use of the web_scraper.extract_content_from_url function in order to retrieve additional information from the web."
+                    "Make use of the web_scraper.search_web function in order to retrieve additional information from the web."
+                ),
+                tools=[self.web_scraper.extract_content_from_url, self.web_scraper.search_web]
+
             )
             
-            user_prompt = f"""
-            Create a quick reference guide for: {topic}
             
-            Here's some relevant information:
-            {content}
-            
-            Make it concise but comprehensive, focusing on the most important information 
-            someone would need for quick reference while studying {topic}.
-            """
-            
-            response = await agent.run(user_prompt)
+            response = await agent.run(topic)
             return response.data
         
         except Exception as e:

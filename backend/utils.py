@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("pydantic_ai").setLevel(logging.DEBUG)
 
 load_dotenv()
-API_KEY = "AIzaSyDRvk_-BCGPm7z0cS_GrP_RKxviw3i6sRM"
+API_KEY = os.getenv('GEMINI_API_KEY')
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -3,7 +3,7 @@ from pydantic_ai import settings as pydantic_ai_settings
 from fastapi import UploadFile, HTTPException
 from passlib.context import CryptContext
 from pydantic_ai.models.gemini import GeminiModel
-from pydantic_ai import Agent
+from pydantic_ai import Agent, Tool
 from typing import List
 import PyPDF2
 import docx
@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("pydantic_ai").setLevel(logging.DEBUG)
 
 load_dotenv()
-API_KEY = os.getenv('GEMINI_API_KEY')
+API_KEY = "AIzaSyDRvk_-BCGPm7z0cS_GrP_RKxviw3i6sRM"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -210,7 +210,7 @@ class SummaryQuestionGeneratorAgent:
                 'Make use of the self._enhance_with_web_content function in order to retrieve additional information from the web.'
                 'The questions should be clear, concise, and relevant to the text.'
             ),
-            tools=[self._enhance_with_web_content]
+            tools=[Tool(self._enhance_with_web_content)]
         )
 
         response = await agent.run(text)
@@ -249,7 +249,7 @@ class SummaryQuestionGeneratorAgent:
                 f"While using supplementary information for context, prioritize the original text in your summary."
                 "Make use of the self._enhance_with_web_content function in order to retrieve additional information from the web."
             ),
-            tools=[self._enhance_with_web_content]
+            tools=[Tool(self._enhance_with_web_content)]
         )
         
         response = await agent.run(text)
@@ -296,10 +296,9 @@ class StudyPlanAgent:
                     
                     "The structure of your response should be well-organized with clear sections and subsections. "
                     "Make the plan adaptable for different learning styles."
-                    "Make use of the web_scraper.extract_content_from_url function in order to retrieve additional information from the web."
                     "Make use of the web_scraper.search_web function in order to retrieve additional information from the web."
                 ),
-                tools=[self.web_scraper.extract_content_from_url, self.web_scraper.search_web]
+                tools=[Tool(self.web_scraper.search_web)]
             )
             
             response = await agent.run(topic)
@@ -342,7 +341,7 @@ class StudyPlanAgent:
                     "Make use of the web_scraper.extract_content_from_url function in order to retrieve additional information from the web."
                     "Make use of the web_scraper.search_web function in order to retrieve additional information from the web."
                 ),
-                tools=[self.web_scraper.extract_content_from_url, self.web_scraper.search_web]
+            tools=[Tool(self.web_scraper.search_web)]
 
             )
             

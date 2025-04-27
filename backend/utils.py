@@ -22,7 +22,8 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("pydantic_ai").setLevel(logging.DEBUG)
 
 load_dotenv()
-API_KEY = "AIzaSyDRvk_-BCGPm7z0cS_GrP_RKxviw3i6sRM"
+API_KEY = str(os.getenv("GEMINI_API_KEY"))
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -360,4 +361,70 @@ def get_study_plan_agent():
     """
     return StudyPlanAgent()
 
+
+class InterviewGenerationAgent:
+    def __init__(self):
+        self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
+
+    async def generate_interview_questions(self, role: str, interview_type: str, level: str, techstack: List[str], num_questions: int) -> List[str]:
+        """
+        Generates interview questions based on the specified parameters.
+        """
+        techstack_str = ", ".join(techstack)
+        prompt = (
+            f"Prepare exactly {num_questions} interview questions for a job interview.\n"
+            f"The job role is: {role}.\n"
+            f"The job experience level is: {level}.\n"
+            f"The tech stack used in the job includes: {techstack_str}.\n"
+            f"The focus between behavioural and technical questions should lean towards: {interview_type}.\n"
+            f"Please return ONLY the questions themselves, without any introductory text, numbering, or explanations.\n"
+            f"The questions are going to be read by a voice assistant, so do not use special characters like '/' or '*' which might break the voice assistant. Use words instead if necessary (e.g., 'slash', 'star').\n"
+            f"Return the questions formatted exactly like this JSON array string:\n"
+            f'["Question 1", "Question 2", "Question 3"]\n\n'
+            f'Example for 3 questions: ["Tell me about a time you faced a technical challenge.", "Explain the concept of closures in JavaScript.", "How do you handle conflicts within a team?"]'
+        )
+
+        try:
+            # Using Agent to get structured output (a string that should be JSON)
+            agent = Agent(
+                self.model,
+                result_type=str, # Expecting a string that represents a JSON list
+                system_prompt=prompt
+            )
+
+            # Run the agent with a simple input (the prompt itself contains all info)
+            # We pass a dummy input as Agent expects one, but our prompt is self-contained.
+            response = await agent.run("Generate questions based on the system prompt.")
+
+            raw_questions_string = response.data
+
+            # Attempt to parse the string as JSON
+            try:
+                parsed_questions = json.loads(raw_questions_string)
+                if not isinstance(parsed_questions, list) or not all(isinstance(q, str) for q in parsed_questions):
+                     raise ValueError("Generated output is not a list of strings.")
+                return parsed_questions
+            except (json.JSONDecodeError, ValueError) as e:
+                logging.error(f"Failed to parse generated questions JSON: {e}")
+                logging.error(f"Raw output from LLM: {raw_questions_string}")
+                # Fallback: Try splitting by newline if JSON parsing fails and it looks like a list
+                if "\n" in raw_questions_string.strip():
+                    lines = [line.strip().strip('",') for line in raw_questions_string.strip().strip('[]').split('\n') if line.strip()]
+                    # Basic check if lines look like questions
+                    if lines and len(lines) > 0:
+                         logging.warning("Falling back to newline splitting for questions.")
+                         return lines
+                raise HTTPException(status_code=500, detail="Failed to generate questions in the expected format.")
+
+
+        except Exception as e:
+            logging.error(f"Error generating interview questions: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to generate interview questions: {str(e)}")
+
+
+def get_interview_generation_agent():
+    """
+    Returns an instance of the InterviewGenerationAgent.
+    """
+    return InterviewGenerationAgent()
 

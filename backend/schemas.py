@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator # Import field_validator for Pydantic v2+
 from datetime import datetime
 from typing import Optional, List
+import json # Import json
 
 
 class BasePost(BaseModel):
@@ -122,3 +123,15 @@ class StudyPlanData(BaseModel):
     sections: List[StudyPlanSection]
     total_estimated_time: str
     error: Optional[str] = None
+
+class InterviewCreate(BaseModel):
+    role: str
+    type: str
+    level: str
+    techstack: List[str]
+    amount: int 
+    finalized: bool = True
+   
+    model_config = {
+        "from_attributes": True 
+    }

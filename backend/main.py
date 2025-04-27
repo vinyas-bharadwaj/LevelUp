@@ -3,7 +3,7 @@ import uvicorn
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db
-from routers import users, auth, questions, summary, studyplan
+from routers import users, auth, questions, summary, studyplan, interview
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,6 +35,7 @@ app.include_router(auth.router)
 app.include_router(questions.router)
 app.include_router(summary.router)
 app.include_router(studyplan.router)
+app.include_router(interview.router)
 
 # Event handlers
 @app.on_event("startup")

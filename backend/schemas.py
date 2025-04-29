@@ -38,7 +38,8 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
+    username: Optional[str] = None
 
 class ResponseQuestions(BaseModel):
     question: str
@@ -128,9 +129,8 @@ class InterviewCreate(BaseModel):
     role: str
     type: str
     level: str
-    techstack: List[str]
+    techstack: str
     amount: int 
-    finalized: bool = True
    
     model_config = {
         "from_attributes": True 

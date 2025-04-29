@@ -22,6 +22,7 @@ interface AuthContextType {
   loginUser: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   signupUser: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   logoutUser: () => void;
+  authTokens: AuthTokens | null;
 }
 
 // Create Auth Context
@@ -185,7 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ signupUser, loginUser, logoutUser, user }}>
+    <AuthContext.Provider value={{ signupUser, loginUser, logoutUser, user, authTokens }}>
       {alertMessage && <Alert message={alertMessage} type={alertType} duration={3000} />}
       {children}
     </AuthContext.Provider>

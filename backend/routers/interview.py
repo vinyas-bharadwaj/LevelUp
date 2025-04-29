@@ -65,7 +65,6 @@ async def create_interview_questions(
             techstack=json.dumps(interview_data.techstack),
             questions=json.dumps(generated_questions), 
             user_id=current_user.id,
-            finalized=interview_data.finalized
         )
 
         db.add(db_interview)

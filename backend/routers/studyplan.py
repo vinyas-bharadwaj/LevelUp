@@ -93,14 +93,12 @@ async def get_user_studyplans(
 async def get_studyplan(
     plan_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
     """
     Get a specific study plan by ID
     """
     study_plan = db.query(StudyPlan).filter(
         StudyPlan.id == plan_id,
-        StudyPlan.user_id == current_user.id
     ).first()
     
     if not study_plan:
@@ -129,14 +127,12 @@ async def get_studyplan(
 async def get_quick_reference(
     plan_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
 ):
     """
     Get the quick reference guide for a specific study plan
     """
     study_plan = db.query(StudyPlan).filter(
         StudyPlan.id == plan_id,
-        StudyPlan.user_id == current_user.id
     ).first()
     
     if not study_plan:

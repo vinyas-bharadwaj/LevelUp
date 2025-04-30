@@ -17,49 +17,36 @@ interface GridCell {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // Create a diamond grid pattern with varying shades of gray
-  const rows = 20;  // Adjust for larger diamonds
-  const cols = 30;  // Adjust for larger diamonds
+  const rows = 20;  // Keep current row count
+  const cols = 60;  // Keep current column count
   
-  // Gray shade options from lightest to darkest
   const grayShades = [
     'bg-white',
     'bg-gray-100',
     'bg-gray-200',
-    
   ];
   
   // Generate all grid cells for the diamond pattern
   const gridCells: GridCell[] = [];
   
-  for (let row = -2; row < rows + 2; row++) {  // Add extra rows for better edge coverage
-    for (let col = -2; col < cols + 2; col++) { // Add extra columns for better edge coverage
-      // Create a deterministic but interesting pattern
-      // We'll use a combination of row and column to determine the shade
+  // Using a repeatable pattern approach rather than relative position
+  for (let row = -2; row < rows + 2; row++) { 
+    for (let col = -2; col < cols + 2; col++) {
       
-      // Pattern 1: Diagonal stripes
-      const diagonalValue = (row + col) % grayShades.length;
+      // Simplified pattern generation - more consistent repeating pattern
+      // Use modulo to create a repeating pattern regardless of position
+      const patternSize = 4; // Size of the repeating pattern
+      const normalizedRow = Math.abs(row % patternSize);
+      const normalizedCol = Math.abs(col % patternSize);
       
-      // Pattern 2: Concentric diamonds
-      const centerRow = rows / 2;
-      const centerCol = cols / 2;
-      const distanceFromCenter = Math.max(
-        Math.abs(row - centerRow),
-        Math.abs(col - centerCol)
-      );
-      const ringValue = distanceFromCenter % grayShades.length;
-      
-      // Pattern 3: Checkerboard
-      const checkerValue = ((row % 2) + (col % 2)) % 2 === 0 ? 0 : 2;
-      
-      // Combine patterns for more visual interest
-      // With a higher weight on the diagonal pattern
-      const combinedValue = (diagonalValue * 2 + ringValue + checkerValue) % grayShades.length;
+      // Create simple diagonal pattern
+      const patternValue = (normalizedRow + normalizedCol) % grayShades.length;
       
       gridCells.push({
         id: (row + 2) * (cols + 4) + (col + 2),
         row,
         col,
-        shade: grayShades[combinedValue]
+        shade: grayShades[patternValue]
       });
     }
   }
@@ -68,29 +55,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.className} relative overflow-x-hidden`}>
         {/* Diamond grid background */}
-        <div className="fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute inset-0 -m-10" style={{ 
-            transform: 'scale(1.2)', 
-            transformOrigin: 'center center'
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute" style={{ 
+            top: 0,
+            left: "-50px", // Start pattern to the left of viewport
+            right: 0,
+            bottom: 0,
+            width: "calc(100% + 100px)", // Extend width beyond viewport
+            height: "100%"
           }}>
             {gridCells.map((cell) => (
               <div
                 key={cell.id}
                 className={`absolute border border-gray-300 ${cell.shade}`}
                 style={{
-                  width: '10vmin',  // Larger diamonds
-                  height: '10vmin', // Larger diamonds
-                  top: `calc(${cell.row * 7}vmin)`,
-                  left: `calc(${cell.col * 7}vmin)`,
-                  transform: 'rotate(45deg)', // Rotate to create diamond shape
+                  width: '50px',
+                  height: '50px',
+                  top: `${cell.row * 35}px`,
+                  left: `${cell.col * 35}px`,
+                  transform: 'rotate(45deg)',
                 }}
               />
             ))}
           </div>
         </div>
+        
         <AuthProvider>
           <Navbar />
-          <main className="px-6 py-12 relative">{children}</main>
+          {children}
         </AuthProvider>
       </body>
     </html>

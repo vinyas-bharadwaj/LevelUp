@@ -3,22 +3,25 @@ import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useRouter } from 'next/navigation';
 import Alert from "@/app/components/alert";
 
-// Define interfaces for form data and alert
+// Define interfaces for form data and props
 interface FormData {
-  word_length: number;
-  detail_level: "low" | "medium" | "high";
+  test_title: string;
+  num_questions: number;
+  difficulty: "beginner" | "easy" | "medium" | "hard" | "very hard" | "expert";
   file: File | null;
 }
+
 
 interface AlertProps {
   type: "success" | "error";
   message: string;
 }
 
-const SummaryGeneratorForm: React.FC = () => {
+const TestGeneratorForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    word_length: 150,
-    detail_level: "medium",
+    test_title: "",
+    num_questions: 5,
+    difficulty: "medium",
     file: null,
   });
   
@@ -46,7 +49,7 @@ const SummaryGeneratorForm: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "word_length" ? parseInt(value, 10) : value,
+      [name]: name === "num_questions" ? parseInt(value, 10) : value,
     }));
   };
 
@@ -59,6 +62,7 @@ const SummaryGeneratorForm: React.FC = () => {
         file: selectedFile
       }));
       setFileName(selectedFile.name);
+      console.log("File selected:", selectedFile.name, selectedFile.type, selectedFile.size);
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -87,21 +91,37 @@ const SummaryGeneratorForm: React.FC = () => {
     if (!formData.file) {
       setAlert({
         type: "error",
-        message: "Please upload a file to summarize"
+        message: "Please upload a reference file"
       });
       return;
     }
 
+    // Validate other required fields
+    if (!formData.test_title.trim()) {
+      setAlert({
+        type: "error",
+        message: "Test title is required"
+      });
+      return;
+    }
+   
     setLoading(true);
     try {
-      // Create URL with query parameters
-      const url = new URL("http://127.0.0.1:8000/summary/generate-summary");
-      url.searchParams.append("word_length", formData.word_length.toString());
-      url.searchParams.append("detail_level", formData.detail_level);
+      // Create URL with query parameters for the required fields (except file)
+      // FastAPI expects these as query parameters, not form fields
+      const url = new URL("http://127.0.0.1:8000/questions/generate-questions/");
+      url.searchParams.append("test_title", formData.test_title);
+      url.searchParams.append("num_questions", formData.num_questions.toString());
+      url.searchParams.append("difficulty", formData.difficulty);
       
-      // Create FormData for the file
+      console.log("Submitting to URL:", url.toString());
+      
+      // Create FormData for the file only
       const formDataToSend = new FormData();
-      formDataToSend.append("file", formData.file);
+      if (formData.file) {
+        // FastAPI expects the file parameter to be named "file"
+        formDataToSend.append("file", formData.file);
+      }
       
       const response = await fetch(url.toString(), {
         method: "POST",
@@ -111,6 +131,8 @@ const SummaryGeneratorForm: React.FC = () => {
         body: formDataToSend,
       });
       
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
         let errorMessage = `Error: ${response.status} ${response.statusText}`;
         
@@ -118,6 +140,7 @@ const SummaryGeneratorForm: React.FC = () => {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorMessage;
         } catch (e) {
+          // If can't parse JSON, try to get text
           try {
             const errorText = await response.text();
             errorMessage = errorText || errorMessage;
@@ -126,15 +149,21 @@ const SummaryGeneratorForm: React.FC = () => {
           }
         }
         
+        console.error("Error response:", errorMessage);
         throw new Error(errorMessage);
       }
       
       const result = await response.json();
+      console.log("Success response:", result);
+     
+      // Store the response in localStorage
+      localStorage.setItem("generatedTest", JSON.stringify(result));
      
       // Reset form after successful submission
       setFormData({
-        word_length: 150,
-        detail_level: "medium",
+        test_title: "",
+        num_questions: 5,
+        difficulty: "medium",
         file: null,
       });
       setFileName("");
@@ -147,11 +176,13 @@ const SummaryGeneratorForm: React.FC = () => {
      
       setAlert({
         type: "success",
-        message: "Summary generated successfully!"
+        message: "Test generated successfully!"
       });
 
-      // Redirect to the summary page using the summary ID
-      router.push(`/summaries/${result.id}`);
+      // Redirect to the test page using the test ID
+      if (result.test_id) {
+        router.push(`/questions/${result.test_id}`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Something went wrong";
       setAlert({
@@ -165,23 +196,21 @@ const SummaryGeneratorForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Generate Summary</h2>
+    <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md my-12">
+      <h2 className="text-2xl font-bold mb-6 text-center">Generate Test Questions</h2>
        
       {alert && <Alert type={alert.type} message={alert.message} />}
        
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="word_length" className="block text-sm font-medium text-gray-700">
-            Summary Length (words)
+          <label htmlFor="test_title" className="block text-sm font-medium text-gray-700">
+            Test Title
           </label>
           <input
-            type="number"
-            id="word_length"
-            name="word_length"
-            min="50"
-            max="500"
-            value={formData.word_length}
+            type="text"
+            id="test_title"
+            name="test_title"
+            value={formData.test_title}
             onChange={handleInputChange}
             className="w-full p-2 border rounded-md"
             required
@@ -189,26 +218,46 @@ const SummaryGeneratorForm: React.FC = () => {
         </div>
          
         <div className="space-y-2">
-          <label htmlFor="detail_level" className="block text-sm font-medium text-gray-700">
-            Detail Level
+          <label htmlFor="num_questions" className="block text-sm font-medium text-gray-700">
+            Number of Questions
+          </label>
+          <input
+            type="number"
+            id="num_questions"
+            name="num_questions"
+            min="1"
+            max="50"
+            value={formData.num_questions}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+         
+        <div className="space-y-2">
+          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700">
+            Difficulty Level
           </label>
           <select
-            id="detail_level"
-            name="detail_level"
-            value={formData.detail_level}
+            id="difficulty"
+            name="difficulty"
+            value={formData.difficulty}
             onChange={handleInputChange}
             className="w-full p-2 border rounded-md"
             required
           >
-            <option value="low">Low (Key points only)</option>
-            <option value="medium">Medium (Main ideas and important details)</option>
-            <option value="high">High (Comprehensive coverage)</option>
+            <option value="beginner">Beginner</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="very hard">Very Hard</option>
+            <option value="expert">Expert</option>
           </select>
         </div>
          
         <div className="space-y-2">
           <label htmlFor="file" className="block text-sm font-medium text-gray-700">
-            Upload Document *
+            Upload Reference Material *
           </label>
           <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
@@ -246,11 +295,11 @@ const SummaryGeneratorForm: React.FC = () => {
           disabled={loading}
           className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#2C3E50] hover:bg-[#44505c] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         >
-          {loading ? "Generating Summary..." : "Generate Summary"}
+          {loading ? "Generating..." : "Generate Test Questions"}
         </button>
       </form>
     </div>
   );
 };
 
-export default SummaryGeneratorForm;
+export default TestGeneratorForm;

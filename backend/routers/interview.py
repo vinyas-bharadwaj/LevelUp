@@ -118,5 +118,80 @@ async def get_user_interviews(
         )
 
 
+@router.get("/{interview_id}", status_code=status.HTTP_200_OK)
+async def get_interview_by_id(
+    interview_id: int,
+    db: Session = Depends(get_db)
+    ):
+    """
+    Retrieves a specific interview by its ID for the currently logged-in user.
+    """
+    try:        
+        interview = db.query(Interview).filter(
+            Interview.id == interview_id,
+        ).first()
+        
+        if not interview:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Interview with ID {interview_id} not found"
+            )
+            
+        logger.info(f"Successfully retrieved interview ID: {interview_id}")
+        return interview
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error fetching interview ID {interview_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while fetching the interview: {str(e)}"
+        )
+
+
+@router.delete("/{interview_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_interview(
+    interview_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Deletes a specific interview by its ID for the currently logged-in user.
+    """
+    try:
+        logger.info(f"Attempting to delete interview ID: {interview_id} for user ID: {current_user.id}")
+        
+        interview_query = db.query(Interview).filter(
+            Interview.id == interview_id,
+            Interview.user_id == current_user.id
+        )
+        
+        interview = interview_query.first()
+        
+        if not interview:
+            logger.warning(f"Interview ID: {interview_id} not found for user ID: {current_user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Interview with ID {interview_id} not found"
+            )
+            
+        interview_query.delete(synchronize_session=False)
+        db.commit()
+        
+        logger.info(f"Successfully deleted interview ID: {interview_id}")
+        return {"message": "Interview deleted successfully"}
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting interview ID {interview_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while deleting the interview: {str(e)}"
+        )
+
+
 
 

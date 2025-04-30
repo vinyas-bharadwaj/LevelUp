@@ -98,7 +98,6 @@ async def get_user_summaries(
 @router.get("/{summary_id}", response_model=SummaryResponse)
 async def get_summary_by_id(
     summary_id: int,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -108,7 +107,6 @@ async def get_summary_by_id(
     """
     summary = db.query(models.Summary).filter(
         models.Summary.id == summary_id,
-        models.Summary.user_id == current_user.id
     ).first()
     
     if not summary:

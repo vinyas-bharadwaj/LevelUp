@@ -1,9 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 import uvicorn
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from database import init_db
 from routers import users, auth, questions, summary, studyplan, interview
+
+class TestingRequest(BaseModel):
+    answers: str
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,8 +60,9 @@ def home():
     return "hello world"
 
 @app.post('/testing')
-def testing(sentence: str):
-    return {"message": sentence}
+def testing(answers: TestingRequest = Body(...)):
+    print(answers)
+    return {"message": answers}
 
 if __name__ == "__main__":
     uvicorn.run(

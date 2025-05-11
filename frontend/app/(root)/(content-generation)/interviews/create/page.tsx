@@ -5,6 +5,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { PhoneIncoming, PhoneOff, Wifi, Mic, MicOff, ArrowLeft, User, Clock, Activity, Headphones } from "lucide-react"; 
 import AuthContext from "@/app/context/AuthContext";
 import Link from "next/link";
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 // Initialize vapi outside component to avoid recreation on re-renders
 const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || "");
@@ -16,8 +17,66 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
     const [callDuration, setCallDuration] = useState(0);
     const { user, authTokens } = useContext(AuthContext) || {}; 
     const hasSetupListeners = useRef(false);
+    const [apiEndpointCalledInSession, setApiEndpointCalledInSession] = useState(false); // New state
+    const router = useRouter(); // Initialize router
 
-    const assistantId = process.env.NEXT_PUBLIC_VAPI_INTERVIEW_ASSISTENT_ID || "";
+    const assistantId = process.env.NEXT_PUBLIC_VAPI_INTERVIEW_ASSISTANT_ID || "";
+
+    // Function to fetch interviews and redirect
+    const fetchInterviewsAndRedirect = async () => {
+        if (!authTokens?.access_token) {
+            console.error("No auth token available to fetch interviews.");
+            setError("Authentication error. Cannot fetch interview data.");
+            return;
+        }
+
+        try {
+            console.log("Fetching interviews from localhost:8000/interviews...");
+            const response = await fetch("http://localhost:8000/interviews", {
+                headers: {
+                    "Authorization": `Bearer ${authTokens.access_token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error("Failed to fetch interviews:", response.status, errorData);
+                setError(`Failed to fetch interview data: ${response.statusText}`);
+                return;
+            }
+
+            const interviews = await response.json();
+
+            if (!Array.isArray(interviews) || interviews.length === 0) {
+                console.log("No interviews found or invalid format.");
+                // Optionally, set an error or a message if no interviews are found
+                // setError("No interviews found to redirect to.");
+                return;
+            }
+
+            // Find the latest interview by created_at
+            // Ensure created_at is a valid date string for robust sorting
+            const latestInterview = interviews.sort((a, b) => {
+                const dateA = new Date(a.created_at).getTime();
+                const dateB = new Date(b.created_at).getTime();
+                return dateB - dateA; // Sort descending
+            })[0];
+
+            if (latestInterview && latestInterview.id) {
+                console.log("Latest interview found:", latestInterview);
+                router.push(`/interviews/${latestInterview.id}`);
+            } else {
+                console.log("Could not determine the latest interview or ID is missing.");
+                // Optionally, set an error
+                // setError("Could not determine the latest interview to redirect.");
+            }
+
+        } catch (err) {
+            console.error("Error in fetchInterviewsAndRedirect:", err);
+            setError("An error occurred while processing interview data.");
+        }
+    };
 
     // Setup event listeners only once
     useEffect(() => {
@@ -29,20 +88,41 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
             setIsConnecting(false); // Explicitly set connecting to false when call starts
             setError(null);
             setCallDuration(0);
+            setApiEndpointCalledInSession(false); // Reset flag for the new session
         };
 
-        const handleCallEnd = () => {
-            console.log("Vapi call ended.");
+        const handleCallEnd = async () => { // Make handleCallEnd async
+            console.log("Vapi call ended (via call-end event).");
             setIsCallActive(false);
             setIsConnecting(false); // Ensure connecting is false when call ends
-            setError(null);
+            setError(null); // Clear any error if call ends cleanly
+
+            if (apiEndpointCalledInSession) {
+                console.log("API endpoint was called in this session and call has ended. Fetching interviews.");
+                await fetchInterviewsAndRedirect(); // Await the async function
+                setApiEndpointCalledInSession(false); // Reset flag after processing
+            }
         };
 
-        const handleError = (e: any) => {
-            console.error("Vapi error:", e);
-            setError(`An error occurred: ${e.message || e}`);
+        const handleError = async (e: any) => { // Make handleError async
+            console.error("Vapi error:", e); // Log the full error object
+
+            const isMeetingEffectivelyOverByError = e?.errorMsg === "Meeting has ended" || e?.error?.type === "ejected";
+
+            if (!isMeetingEffectivelyOverByError) {
+                // Only set a generic error if it's not the "Meeting has ended" type
+                setError(`An error occurred: ${e.message || e.errorMsg || String(e)}`);
+            }
+            // If it's "Meeting has ended", we expect fetchInterviewsAndRedirect to handle navigation or its own errors.
+
             setIsCallActive(false);
-            setIsConnecting(false); // Ensure connecting is false on error
+            setIsConnecting(false);
+
+            if (isMeetingEffectivelyOverByError && apiEndpointCalledInSession) {
+                console.log("API endpoint was called and meeting ended (via error event: " + (e.errorMsg || e.message || "Unknown") + "). Fetching interviews.");
+                await fetchInterviewsAndRedirect(); // This function handles its own errors
+                setApiEndpointCalledInSession(false); // Reset flag
+            }
         };
 
         // Add a connection established handler
@@ -51,12 +131,40 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
             setIsConnecting(false); // Clear connecting state immediately when connected
         };
 
+        const handleMessage = async (message: any) => { // Make handleMessage async
+            if (message.type === "workflow.node.started" && message.node?.type === "apiRequest") {
+                console.log("successfully called api endpoint (workflow.node.started), fetching interviews and redirecting.");
+                // Set the flag, though redirection will be attempted immediately
+                setApiEndpointCalledInSession(true); 
+                await fetchInterviewsAndRedirect(); // Call redirect immediately
+            }
+            // Example structure: { type: "function-call", ... }, { type: "tool-calls", ... }, etc.
+            if (message.type === "function-call") {
+                // The assistant made a function call
+                console.log("Function call detected:", message);
+            }
+            if (message.type === "tool-calls") {
+                // The assistant used a tool (such as calling an endpoint)
+                console.log("Tool call detected:", message);
+                 // You might want to check here too if this is the specific API call you're interested in
+                // For example, if message.tool_calls.some(toolCall => toolCall.function?.name === "your_api_endpoint_tool_name")) {
+                //    // If you also want to redirect on other types of tool calls indicating API success:
+                //    setApiEndpointCalledInSession(true); 
+                //    await fetchInterviewsAndRedirect();
+                // }
+            }
+            // You can add more conditions here for other message types if needed
+            console.log("Generic message received:", message);
+        };
+
+
         vapi.on("call-start", handleCallStart);
         vapi.on("call-end", handleCallEnd);
         vapi.on("error", handleError);
+        vapi.on("message", handleMessage); 
         // Listen for connection established event if available in Vapi
         if (typeof vapi.on === 'function' && vapi.on.toString().includes('connected')) {
-            vapi.on("connected", handleConnected);
+            vapi.on("speech-start", handleConnected); // Assuming 'speech-start' implies connected for your Vapi version
         }
         
         hasSetupListeners.current = true;
@@ -65,12 +173,13 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
             vapi.off("call-start", handleCallStart);
             vapi.off("call-end", handleCallEnd);
             vapi.off("error", handleError);
+            vapi.off("message", handleMessage);
             // Remove connection established handler if it was added
             if (typeof vapi.off === 'function' && vapi.off.toString().includes('connected')) {
-                vapi.off("connected", handleConnected);
+                vapi.off("speech-start", handleConnected); // Use the same event name for off
             }
         };
-    }, []); 
+    }, [authTokens, router, apiEndpointCalledInSession]); // Add dependencies used in handlers or fetch function if they are not stable
 
     // Add a timeout to clear the connecting state if events don't fire
     useEffect(() => {
@@ -94,6 +203,7 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
     const startCall = async () => {
         setIsConnecting(true);
         setError(null);
+        setApiEndpointCalledInSession(false); // Reset before starting a new call attempt
         try {
             console.log("Starting call with assistant ID:", assistantId);
             
@@ -125,16 +235,17 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
         }
     };
 
-    const endCall = async () => {
+    const endCall = () => {
         try {
             setIsConnecting(true); 
-            await vapi.stop();
+            vapi.stop();
             // Note: We don't update state here - event listeners will handle that
+            // The handleCallEnd event will trigger the fetchInterviewsAndRedirect if conditions are met
         } catch (err) {
             console.error("Error stopping Vapi call:", err);
             setError("Failed to stop the call properly.");
-            setIsConnecting(false);
-            setIsCallActive(false);
+            setIsConnecting(false); // Fallback if event doesn't fire
+            setIsCallActive(false); // Fallback
         }
     };
 
@@ -308,25 +419,16 @@ export default function InterviewPage({ params }: { params: { id: string } }) {
                                             className="inline-flex items-center px-6 py-3 text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <PhoneIncoming className="w-5 h-5 mr-2" />
-                                            {isConnecting ? (
-                                                <>
-                                                    <span>Connecting</span>
-                                                    <span className="inline-flex ml-2">
-                                                        <span className="animate-bounce">.</span>
-                                                        <span className="animate-bounce delay-150">.</span>
-                                                        <span className="animate-bounce delay-300">.</span>
-                                                    </span>
-                                                </>
-                                            ) : "Start Interview"}
+                                            {getButtonText()}
                                         </button>
                                     ) : (
                                         <button
                                             onClick={endCall}
-                                            disabled={isConnecting}
+                                            disabled={isConnecting && isCallActive} // Disable only if connecting to end
                                             className="inline-flex items-center px-6 py-3 text-base font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <PhoneOff className="w-5 h-5 mr-2" />
-                                            {isConnecting ? "Ending..." : "End Interview"}
+                                            {getButtonText()}
                                         </button>
                                     )}
                                 </div>

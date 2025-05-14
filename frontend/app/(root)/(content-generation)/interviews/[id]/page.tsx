@@ -185,6 +185,7 @@ export default function InterviewPage() {
             const connectionPromise = vapi.start(process.env.NEXT_PUBLIC_VAPI_INTERVIEW_ASKER_ID || "", {
                 variableValues: {
                     questions: formattedQuestions,
+                    authToken: authTokens?.access_token
                 }
             });
             

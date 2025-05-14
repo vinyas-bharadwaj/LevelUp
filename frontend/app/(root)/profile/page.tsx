@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileCheck, FileText, Plus, Loader2, Book, Map } from 'lucide-react';
+import { FileCheck, FileText, Plus, Loader2, Book, Map, MessageSquare, Headphones } from 'lucide-react';
 import AuthContext from '@/app/context/AuthContext';
 
 // Define interfaces
@@ -41,17 +41,32 @@ interface StudyPlan {
   created_at: string;
 }
 
+// Define the new Interview interface
+interface Interview {
+  id: number;
+  role: string;
+  type: string;
+  level: string;
+  techstack: string;
+  questions: string;
+  user_id: number;
+  created_at: string;
+}
+
 export default function ProfilePage() {
   const [tests, setTests] = useState<Test[]>([]);
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loadingTests, setLoadingTests] = useState(true);
   const [loadingSummaries, setLoadingSummaries] = useState(true);
   const [loadingStudyPlans, setLoadingStudyPlans] = useState(true);
+  const [loadingInterviews, setLoadingInterviews] = useState(true);
   const [errorTests, setErrorTests] = useState<string | null>(null);
   const [errorSummaries, setErrorSummaries] = useState<string | null>(null);
   const [errorStudyPlans, setErrorStudyPlans] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'tests' | 'summaries' | 'roadmaps'>('tests');
+  const [errorInterviews, setErrorInterviews] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'tests' | 'summaries' | 'roadmaps' | 'interviews'>('tests');
   const router = useRouter();
   const { user } = useContext(AuthContext) || {}; // Get user from context
   
@@ -162,10 +177,47 @@ export default function ProfilePage() {
         setLoadingStudyPlans(false);
       }
     }
+
+    // New function to fetch interviews
+    async function fetchInterviews() {
+      setLoadingInterviews(true);
+      setErrorInterviews(null);
+      
+      try {
+        // Get authentication token from localStorage
+        const authTokens = JSON.parse(localStorage.getItem('authTokens') || '{}');
+        const token = authTokens.access_token;
+        
+        if (!token) {
+          throw new Error('Authentication token not found. Please log in.');
+        }
+        
+        // Fetch interviews from API
+        const response = await fetch('http://localhost:8000/interviews/', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch interviews: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setInterviews(data);
+      } catch (err) {
+        console.error('Error fetching interviews:', err);
+        setErrorInterviews(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoadingInterviews(false);
+      }
+    }
     
     fetchTests();
     fetchSummaries();
     fetchStudyPlans();
+    fetchInterviews();
   }, []);
 
   // Handle navigation
@@ -179,6 +231,10 @@ export default function ProfilePage() {
   
   const handleStudyPlanClick = (planId: number) => {
     router.push(`/roadmaps/${planId}`);
+  };
+
+  const handleInterviewClick = (interviewId: number) => {
+    router.push(`/interviews/${interviewId}`);
   };
 
   // Helper functions
@@ -195,6 +251,53 @@ export default function ProfilePage() {
     });
   };
 
+  // Update the parseTechStack function in your profile/page.tsx file
+  const parseTechStack = (techstack: string): string[] => {
+    if (!techstack) {
+      return [];  // Return empty array if techstack is null, undefined or empty
+    }
+    
+    try {
+      // Try to parse as JSON
+      const parsed = JSON.parse(techstack);
+      
+      // Check if the parsed value is already an array
+      if (Array.isArray(parsed)) {
+        return parsed;
+      } 
+      // If it's a string, split by comma and trim
+      else if (typeof parsed === 'string') {
+        return parsed.split(',').map(tech => tech.trim()).filter(tech => tech);
+      }
+      // If it's some other object, return it in array
+      return [String(parsed)];
+    } catch (e) {
+      // If parsing fails, treat as comma-separated string
+      if (typeof techstack === 'string') {
+        return techstack.split(',').map(tech => tech.trim()).filter(tech => tech);
+      }
+      // Fallback: return as single item array
+      return [String(techstack)];
+    }
+  };
+  
+  // Count questions in an interview
+  const countQuestions = (questionsStr: string): number => {
+    try {
+      if (questionsStr.includes('```json')) {
+        const jsonString = questionsStr.split('```json')[1].split('```')[0].trim();
+        const parsed = JSON.parse(JSON.parse(jsonString));
+        return Array.isArray(parsed) ? parsed.length : 1;
+      } else if (questionsStr.startsWith('[')) {
+        const parsed = JSON.parse(questionsStr);
+        return Array.isArray(parsed) ? parsed.length : 1;
+      }
+      return 1;
+    } catch (e) {
+      return 1;
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex flex-col items-center pt-10 px-4 text-[#2C3E50] overflow-hidden">
       {/* Background Art */}
@@ -208,8 +311,8 @@ export default function ProfilePage() {
       <div className="w-full max-w-6xl z-10">
         <h1 className="text-4xl font-extrabold mb-2 text-center">My Dashboard</h1>
         
-        {/* Tabs for switching between Tests, Summaries, and Study Plans */}
-        <div className="flex justify-center mb-8 border-b">
+        {/* Tabs for switching between Tests, Summaries, Study Plans, and Interviews */}
+        <div className="flex justify-center mb-8 border-b overflow-x-auto">
           <button
             onClick={() => setActiveTab('tests')}
             className={`px-6 py-3 font-medium text-lg ${
@@ -247,6 +350,19 @@ export default function ProfilePage() {
             <div className="flex items-center">
               <Map className="w-5 h-5 mr-2" />
               Roadmaps
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('interviews')}
+            className={`px-6 py-3 font-medium text-lg ${
+              activeTab === 'interviews' 
+                ? 'border-b-2 border-[#2C3E50] text-[#2C3E50]' 
+                : 'text-gray-500 hover:text-[#2C3E50]'
+            }`}
+          >
+            <div className="flex items-center">
+              <Headphones className="w-5 h-5 mr-2" />
+              Interviews
             </div>
           </button>
         </div>
@@ -473,6 +589,114 @@ export default function ProfilePage() {
                   >
                     <Plus className="w-5 h-5 mr-2" />
                     Generate New Roadmap
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        )}
+        
+        {/* Interviews Tab Content */}
+        {activeTab === 'interviews' && (
+          <>
+            {loadingInterviews ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-12 w-12 animate-spin text-[#4A90E2]" />
+              </div>
+            ) : errorInterviews ? (
+              <div className="bg-[#FAEBEA] border border-[#E74C3C] text-[#E74C3C] px-6 py-4 rounded-lg max-w-2xl mx-auto mb-8">
+                <p className="font-medium">{errorInterviews}</p>
+              </div>
+            ) : interviews.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-xl shadow-md max-w-lg mx-auto">
+                <Headphones className="h-16 w-16 text-[#4A90E2] mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold">No interview practice sessions found</h2>
+                <p className="mt-2 text-[#4A4A4A]">Create your first interview practice to get started!</p>
+                <button
+                  onClick={() => router.push('/interviews/create')}
+                  className="mt-6 inline-flex items-center px-6 py-3 text-lg font-medium rounded-md text-white bg-[#2C3E50] hover:bg-[#3c4146] transition duration-200"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Interview
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {interviews.map((interview) => (
+                    <div
+                      key={interview.id}
+                      className="bg-white rounded-xl shadow-md hover:shadow-lg duration-200 cursor-pointer overflow-hidden transform hover:-translate-y-1 hover:scale-[1.02] transition-transform"
+                      onClick={() => handleInterviewClick(interview.id)}
+                    >
+                      <div className="h-2 bg-[#2C3E50]"></div>
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-lg font-semibold truncate capitalize">
+                            {interview.role} Interview
+                          </h3>
+                          <span className="text-xs bg-gray-100 rounded-full px-2 py-1">
+                            {interview.level}
+                          </span>
+                        </div>
+                        
+                        <div className="mb-3 flex flex-wrap gap-1">
+                          {parseTechStack(interview.techstack).map((tech, i) => (
+                            <span 
+                              key={i} 
+                              className="text-xs bg-blue-50 text-blue-700 rounded-md px-2 py-1"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center text-sm text-gray-500 mb-3">
+                          <MessageSquare className="h-3 w-3 mr-1" />
+                          <span>{countQuestions(interview.questions)} questions</span>
+                          <span className="mx-2">•</span>
+                          <span className="capitalize">{interview.type}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-[#4A4A4A]">
+                            {formatDate(interview.created_at)}
+                          </span>
+                          <div className="flex space-x-2">
+                            <button
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleInterviewClick(interview.id);
+                              }}
+                            >
+                              <Headphones className="w-3 h-3 mr-1" />
+                              Practice
+                            </button>
+                            <button
+                              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100 transition duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/interviews/${interview.id}/review`);
+                              }}
+                            >
+                              <FileText className="w-3 h-3 mr-1" />
+                              Review
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center mt-8 mb-12">
+                  <button
+                    onClick={() => router.push('/interviews/create')}
+                    className="inline-flex items-center px-6 py-3 text-lg font-medium rounded-md text-white bg-[#2C3E50] hover:bg-[#474e56] transition duration-200"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create New Interview
                   </button>
                 </div>
               </>

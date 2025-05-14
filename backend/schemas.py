@@ -1,7 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator # Import field_validator for Pydantic v2+
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional, List
-import json # Import json
 
 
 class BasePost(BaseModel):
@@ -135,3 +134,13 @@ class InterviewCreate(BaseModel):
     model_config = {
         "from_attributes": True 
     }
+
+class InterviewReviewAnswers(BaseModel):
+    interview_id: int
+    questions: str
+    answers: str
+
+class InterviewReviewResponse(BaseModel):
+    category: str
+    rating: int
+    review: str

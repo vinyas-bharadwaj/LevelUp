@@ -4,3 +4,4 @@ migrations/
 .env
 sql_app.db
 testing.py
+.vscode

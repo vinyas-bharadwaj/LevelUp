@@ -11,8 +11,7 @@ import io
 import json
 import os
 from dotenv import load_dotenv
-from schemas import ResponseQuestions
-from schemas import StudyPlanData
+from schemas import ResponseQuestions, StudyPlanData, InterviewReviewResponse
 
 # Set the debug mode on
 pydantic_ai_settings.debug = True
@@ -362,7 +361,7 @@ def get_study_plan_agent():
     return StudyPlanAgent()
 
 
-class InterviewGenerationAgent:
+class InterviewAgent:
     def __init__(self):
         self.model = GeminiModel('gemini-1.5-flash', api_key=API_KEY)
 
@@ -421,10 +420,34 @@ class InterviewGenerationAgent:
             logging.error(f"Error generating interview questions: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to generate interview questions: {str(e)}")
 
+    async def review_interview(self, questions: str, answers: str):
+        agent = Agent(
+            self.model, 
+            result_type=List[InterviewReviewResponse],
+            system_prompt=(
+            "You are an expert interview coach and evaluator. Review the interview questions and the candidate's answers provided. "
+            f"Following are the questions asked to the user: {questions}"
+            f"Following are the answers to the questions asked: {answers}"
+            "For each answer, provide a comprehensive analysis with the following components:\n"
+            "1. Identify the category of the question (e.g., 'Technical Knowledge', 'Problem Solving', 'Communication Skills', 'Experience', 'Behavioral')\n"
+            "2. Assign a rating from 0 to 100, where:\n"
+            "   - 0-20: Poor/Inadequate response\n"
+            "   - 21-40: Below average response\n"
+            "   - 41-60: Average/Acceptable response\n"
+            "   - 61-80: Good/Strong response\n"
+            "   - 81-100: Excellent/Outstanding response\n"
+            "3. Provide a detailed review with specific strengths and areas for improvement, constructive feedback, and actionable suggestions.\n\n"
+            "Be objective, fair, and constructive in your evaluation. Focus on both content and delivery aspects of the answers. "
+            "Consider factors such as accuracy, completeness, clarity, relevance, and how well the candidate addressed the specific question asked."
+            )
+        )
+        
+        response = await agent.run("Generate a review based on the system prompt")
+        return response.data
 
-def get_interview_generation_agent():
+
+def get_interview_agent():
     """
     Returns an instance of the InterviewGenerationAgent.
     """
-    return InterviewGenerationAgent()
-
+    return InterviewAgent()
